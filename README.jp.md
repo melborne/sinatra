@@ -221,6 +221,51 @@ get('/') { Stream.new }
 
 後述する`stream`ヘルパメソッドを使って、定型パターンを減らしつつストリーミングロジックをルートに埋め込むこともできます。
 
+## カスタムルートマッチャー
+
+先述のようにSinatraはルートマッチャーとして、文字列パターンと正規表現を使うことをビルトインでサポートしています。しかしこれに留まらず、独自のマッチャーを簡単に定義することもできるのです。
+
+``` ruby
+class AllButPattern
+  Match = Struct.new(:captures)
+
+  def initialize(except)
+    @except   = except
+    @captures = Match.new([])
+  end
+
+  def match(str)
+    @captures unless @except === str
+  end
+end
+
+def all_but(pattern)
+  AllButPattern.new(pattern)
+end
+
+get all_but("/index") do
+  # ...
+end
+```
+
+注意: この例はオーバースペックであり、以下のようにも書くことができます。
+
+``` ruby
+get // do
+  pass if request.path_info == "/index"
+  # ...
+end
+```
+
+または、否定先読みを使って:
+
+``` ruby
+get %r{^(?!/index$)} do
+  # ...
+end
+```
+
+
 ## 静的ファイル
 
 静的ファイルは`./public`ディレクトリから配信されます。

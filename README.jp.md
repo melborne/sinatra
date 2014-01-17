@@ -3,22 +3,32 @@
 *注）
 本文書は英語から翻訳したものであり、その内容が最新でない場合もあります。最新の情報はオリジナルの英語版を参照して下さい。*
 
-[DSL](http://ja.wikipedia.org/wiki/ドメイン固有言語)です。
+Sinatraは最小の労力でRubyによるWebアプリケーションを手早く作るための[DSL](http://ja.wikipedia.org/wiki/ドメイン固有言語)です。
 
 ``` ruby
 # myapp.rb
 require 'sinatra'
+
 get '/' do
   'Hello world!'
 end
 ```
 
-gemをインストールして動かしてみる。
+gemをインストールし、
 
-    gem install sinatra
-    ruby myapp.rb
+``` shell
+gem install sinatra
+```
 
-[localhost:4567](http://localhost:4567) を見る。
+次のように実行します。
+
+``` shell
+ruby myapp.rb
+```
+
+[localhost:4567](http://localhost:4567) を開きます。
+
+ThinがあればSinatraはこれを利用するので、`gem install thin`することをお薦めします。
 
 ## ルート
 

@@ -248,7 +248,7 @@ get all_but("/index") do
 end
 ```
 
-注意: この例はオーバースペックであり、以下のようにも書くことができます。
+ノート: この例はオーバースペックであり、以下のようにも書くことができます。
 
 ``` ruby
 get // do
@@ -275,10 +275,106 @@ end
 set :public_folder, File.dirname(__FILE__) + '/static'
 ```
 
-注意: この静的ファイル用のディレクトリ名はURL中に含まれません。
+ノート: この静的ファイル用のディレクトリ名はURL中に含まれません。
 例えば、`./public/css/style.css`は`http://example.com/css/style.css`でアクセスできます。
 
 ## ビュー / テンプレート
+
+各テンプレート言語はそれ自身のレンダリングメソッドを通して展開されます。それらのメソッドは単に文字列を返します。
+
+``` ruby
+get '/' do
+  erb :index
+end
+```
+
+これは、`views/index.erb`をレンダリングします。
+
+テンプレート名を渡す代わりに、直接そのテンプレートの中身を渡すこともできます。
+
+``` ruby
+get '/' do
+  code = "<%= Time.now %>"
+  erb code
+end
+```
+
+テンプレートはハッシュオプションの第２引数を取ります。
+
+``` ruby
+get '/' do
+  erb :index, :layout => :post
+end
+```
+
+これは、`views/post.erb`内に埋め込んだ`views/index.erb`をレンダリングします（デフォルトは`views/layout.erb`があればそれになります）。
+
+Sinatraが理解できないオプションは、テンプレートエンジンに渡されることになります。
+
+
+``` ruby
+get '/' do
+  haml :index, :format => :html5
+end
+```
+
+テンプレート言語ごとにオプションをセットすることもできます。
+
+``` ruby
+set :haml, :format => :html5
+
+get '/' do
+  haml :index
+end
+```
+
+レンダリングメソッドに渡されたオプションは`set`で設定されたオプションを上書きします。
+
+利用可能なオプション:
+
+<dl>
+  <dt>locals</dt>
+  <dd>
+    ドキュメントに渡されるローカルのリスト。パーシャルに便利。
+    例: <tt>erb "<%= foo %>", :locals => {:foo => "bar"}</tt>
+  </dd>
+
+  <dt>default_encoding</dt>
+  <dd>
+    文字エンコーディング（不確かな場合に使用される）。デフォルトは、<tt>settings.default_encoding</tt>。
+  </dd>
+
+  <dt>views</dt>
+  <dd>
+    テンプレートを読み出すビューのディレクトリ。デフォルトは、<tt>settings.views</tt>。
+  </dd>
+
+  <dt>layout</dt>
+  <dd>
+    レイアウトを使うかの指定(<tt>true</tt> または <tt>false</tt>)。値がシンボルの場合は、使用するテンプレートが指定される。例: <tt>erb :index, :layout => !request.xhr?</tt>
+  </dd>
+
+  <dt>content_type</dt>
+  <dd>
+    テンプレートが生成するContent-Type。デフォルトはテンプレート言語ごとに異なる。
+  </dd>
+
+  <dt>scope</dt>
+  <dd>
+    テンプレートをレンダリングするときのスコープ。デフォルトは、アプリケーションのインスタンス。これを変更した場合、インスタンス変数およびヘルパメソッドが利用できなくなる。
+  </dd>
+
+  <dt>layout_engine</dt>
+  <dd>
+    レイアウトをレンダリングするために使用するテンプレートエンジン。レイアウトをサポートしない言語で有用。デフォルトはテンプレートに使われるエンジン。例: <tt>set :rdoc, :layout_engine => :erb</tt>
+  </dd>
+
+  <dt>layout_options</dt>
+  <dd>
+    レイアウトをレンダリングするときだけに使う特別なオプション。例:
+    <tt>set :rdoc, :layout_options => { :views => 'views/layouts' }</tt>
+  </dd>
+</dl>
 
 テンプレートは`./views`ディレクトリ下に配置されています。
 他のディレクトリを使用する場合の例:
@@ -289,374 +385,9 @@ set :views, File.dirname(__FILE__) + '/templates'
 
 テンプレートはシンボルを使用して参照させることを覚えておいて下さい。
 サブデレクトリでもこの場合は`:'subdir/template'`のようにします。
-レンダリングメソッドは文字列が渡されると、そのまま文字列を出力します。
+レンダリングメソッドは文字列が渡されると、それをそのまま文字列として出力するので、シンボルを使ってください。
 
-### Haml テンプレート
-
-hamlを使うにはhamlライブラリが必要です:
-
-``` ruby
-# hamlを読み込みます
-require 'haml'
-
-get '/' do
-  haml :index
-end
-```
-
-`./views/index.haml`を表示します。
-
-[Haml’s
-options](http://haml.info/docs/yardoc/file.HAML_REFERENCE.html#options)
-はSinatraの設定でグローバルに設定することができます。 [Options and
-Configurations](http://www.sinatrarb.com/configuration.html),
-を参照してそれぞれ設定を上書きして下さい。
-
-``` ruby
-set :haml, {:format => :html5 } # デフォルトのフォーマットは:xhtml
-
-get '/' do
-  haml :index, :haml_options => {:format => :html4 } # 上書き
-end
-```
-
-### Erb テンプレート
-
-``` ruby
-# erbを読み込みます
-require 'erb'
-
-get '/' do
-  erb :index
-end
-```
-
-`./views/index.erb`を表示します。
-
-### Erubis
-
-erubisテンプレートを表示するには、erubisライブラリが必要です:
-
-``` ruby
-# erubisを読み込みます
-require 'erubis'
-
-get '/' do
-  erubis :index
-end
-```
-
-`./views/index.erubis`を表示します。
-
-### Builder テンプレート
-
-builderを使うにはbuilderライブラリが必要です:
-
-    # builderを読み込みます
-    require 'builder'
-
-    get '/' do
-      builder :index
-    end
-
-`./views/index.builder`を表示します。
-
-### Nokogiri テンプレート
-
-Nokogiriを使うにはNokogiriライブラリが必要です:
-
-```
-# Nokogiriを読み込みます
-require 'nokogiri'
-
-get '/' do
-  nokogiri :index
-end
-```
-
-`./views/index.nokogiri`を表示します。
-
-### Sass テンプレート
-
-Sassテンプレートを使うにはsassライブラリが必要です:
-
-``` ruby
-# hamlかsassを読み込みます
-require 'sass'
-
-get '/stylesheet.css' do
-  sass :stylesheet
-end
-```
-
-`./views/stylesheet.sass`を表示します。
-
-[Sass’
-options](http://sass-lang.com/docs/yardoc/file.SASS_REFERENCE.html#options)
-はSinatraの設定でグローバルに設定することができます。 see [Options and
-Configurations](http://www.sinatrarb.com/configuration.html),
-を参照してそれぞれ設定を上書きして下さい。
-
-``` ruby
-set :sass, {:style => :compact } # デフォルトのSass styleは :nested
-
-get '/stylesheet.css' do
-  sass :stylesheet, :sass_options => {:style => :expanded } # 上書き
-end
-```
-
-### Scss テンプレート
-
-Scssテンプレートを使うにはsassライブラリが必要です:
-
-``` ruby
-# hamlかsassを読み込みます
-require 'sass'
-
-get '/stylesheet.css' do
-  scss :stylesheet
-end
-```
-
-`./views/stylesheet.scss`を表示します。
-
-[Sass’
-options](http://sass-lang.com/docs/yardoc/file.SASS_REFERENCE.html#options)
-はSinatraの設定でグローバルに設定することができます。 see [Options and
-Configurations](http://www.sinatrarb.com/configuration.html),
-を参照してそれぞれ設定を上書きして下さい。
-
-``` ruby
-set :scss, :style => :compact # デフォルトのScss styleは:nested
-
-get '/stylesheet.css' do
-  scss :stylesheet, :style => :expanded # 上書き
-end
-```
-
-### Less テンプレート
-
-Lessテンプレートを使うにはlessライブラリが必要です:
-
-``` ruby
-# lessを読み込みます
-require 'less'
-
-get '/stylesheet.css' do
-  less :stylesheet
-end
-```
-
-`./views/stylesheet.less`を表示します。
-
-### Liquid テンプレート
-
-Liquidテンプレートを使うにはliquidライブラリが必要です:
-
-``` ruby
-# liquidを読み込みます
-require 'liquid'
-
-get '/' do
-  liquid :index
-end
-```
-
-`./views/index.liquid`を表示します。
-
-LiquidテンプレートからRubyのメソッド(`yield`を除く)を呼び出すことができないため、
-ほぼ全ての場合にlocalsを指定する必要があるでしょう:
-
-``` ruby
-liquid :index, :locals => { :key => 'value' }
-```
-
-### Markdown テンプレート
-
-Markdownテンプレートを使うにはrdiscountライブラリが必要です:
-
-``` ruby
-# rdiscountを読み込みます
-require "rdiscount"
-
-get '/' do
-  markdown :index
-end
-```
-
-`./views/index.markdown`を表示します。(`md`と`mkd`も妥当な拡張子です)
-
-markdownからメソッドを呼び出すことも、localsに変数を渡すこともできません。
-それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
-
-``` ruby
-erb :overview, :locals => { :text => markdown(:introduction) }
-```
-
-他のテンプレートからmarkdownメソッドを呼び出してもよいことに注意してください:
-
-``` haml
-%h1 Hello From Haml!
-%p= markdown(:greetings)
-```
-
-### Textile テンプレート
-
-Textileテンプレートを使うにはRedClothライブラリが必要です:
-
-``` ruby
-# redclothを読み込みます
-require "redcloth"
-
-get '/' do
-  textile :index
-end
-```
-
-`./views/index.textile`を表示します。
-
-textileからメソッドを呼び出すことも、localsに変数を渡すこともできません。
-それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
-
-``` ruby
-erb :overview, :locals => { :text => textile(:introduction) }
-```
-
-他のテンプレートからtextileメソッドを呼び出してもよいことに注意してください:
-
-``` haml
-%h1 Hello From Haml!
-%p= textile(:greetings)
-```
-
-### RDoc テンプレート
-
-RDocテンプレートを使うにはRDocライブラリが必要です:
-
-``` ruby
-# rdoc/markup/to_htmlを読み込みます
-require "rdoc"
-require "rdoc/markup/to_html"
-
-get '/' do
-  rdoc :index
-end
-```
-
-`./views/index.rdoc`を表示します。
-
-rdocからメソッドを呼び出すことも、localsに変数を渡すこともできません。
-それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
-
-``` ruby
-erb :overview, :locals => { :text => rdoc(:introduction) }
-```
-
-他のテンプレートからrdocメソッドを呼び出してもよいことに注意してください:
-
-``` haml
-%h1 Hello From Haml!
-%p= rdoc(:greetings)
-```
-
-### Radius テンプレート
-
-Radiusテンプレートを使うにはradiusライブラリが必要です:
-
-``` ruby
-# radiusを読み込みます
-require 'radius'
-
-get '/' do
-  radius :index
-end
-```
-
-`./views/index.radius`を表示します。
-
-RadiusテンプレートからRubyのメソッド(`yield`を除く)を呼び出すことができないため、
-ほぼ全ての場合にlocalsを指定する必要があるでしょう:
-
-``` ruby
-radius :index, :locals => { :key => 'value' }
-```
-
-### Markaby テンプレート
-
-Markabyテンプレートを使うにはmarkabyライブラリが必要です:
-
-``` ruby
-# markabyを読み込みます
-require 'markaby'
-
-get '/' do
-  markaby :index
-end
-```
-
-`./views/index.mab`を表示します。
-
-### RABL テンプレート
-
-RABLテンプレートを使うにはrablライブラリが必要です:
-
-``` ruby
-# rablを読み込みます
-require 'rabl'
-
-get '/' do
-  rabl :index
-end
-```
-
-`./views/index.rabl`を表示します。
-
-### Slim テンプレート
-
-Slimテンプレートを使うにはslimライブラリが必要です:
-
-``` ruby
-# slimを読み込みます
-require 'slim'
-
-get '/' do
-  slim :index
-end
-```
-
-`./views/index.slim`を表示します。
-
-### Creole テンプレート
-
-Creoleテンプレートを使うにはcreoleライブラリが必要です:
-
-``` ruby
-# creoleを読み込みます
-require 'creole'
-
-get '/' do
-  creole :index
-end
-```
-
-`./views/index.creole`を表示します。
-
-### CoffeeScript テンプレート
-
-CoffeeScriptテンプレートを表示するにはcoffee-scriptライブラリと\`coffee\`バイナリが必要です:
-
-``` ruby
-# coffee-scriptを読み込みます
-require 'coffee-script'
-
-get '/application.js' do
-  coffee :application
-end
-```
-
-`./views/application.coffee`を表示します。
-
-### インラインテンプレート
+### リテラルテンプレート
 
 ``` ruby
 get '/' do
@@ -664,13 +395,506 @@ get '/' do
 end
 ```
 
-文字列をテンプレートとして表示します。
+これはそのテンプレート文字列をレンダリングします。
+
+### 利用可能なテンプレート言語
+
+いくつかの言語には複数の実装があります。使用する（そしてスレッドセーフにする）実装を指定するには、それを最初にrequireしてください。
+
+
+``` ruby
+require 'rdiscount' # または require 'bluecloth'
+get('/') { markdown :index }
+```
+
+#### Haml テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://haml.info/" title="haml">haml</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.haml</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>haml :index, :format => :html5</tt></td>
+  </tr>
+</table>
+
+
+#### Erb テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td>
+      <a href="http://www.kuwata-lab.com/erubis/" title="erubis">erubis</a>
+      または erb (Rubyに同梱)
+    </td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.erb</tt>, <tt>.rhtml</tt> or <tt>.erubis</tt> (Erubis only)</td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>erb :index</tt></td>
+  </tr>
+</table>
+
+#### Builder テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td>
+      <a href="http://builder.rubyforge.org/" title="builder">builder</a>
+    </td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.builder</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>builder { |xml| xml.em "hi" }</tt></td>
+  </tr>
+</table>
+
+インラインテンプレート用にブロックを取ることもできます（例を参照）。
+
+#### Nokogiri テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://nokogiri.org/" title="nokogiri">nokogiri</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.nokogiri</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>nokogiri { |xml| xml.em "hi" }</tt></td>
+  </tr>
+</table>
+
+インラインテンプレート用にブロックを取ることもできます（例を参照）。
+
+
+#### Sass テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://sass-lang.com/" title="sass">sass</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.sass</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>sass :stylesheet, :style => :expanded</tt></td>
+  </tr>
+</table>
+
+
+#### Scss テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://sass-lang.com/" title="sass">sass</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.scss</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>scss :stylesheet, :style => :expanded</tt></td>
+  </tr>
+</table>
+
+#### Less テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://www.lesscss.org/" title="less">less</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.less</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>less :stylesheet</tt></td>
+  </tr>
+</table>
+
+#### Liquid テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://www.liquidmarkup.org/" title="liquid">liquid</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.liquid</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>liquid :index, :locals => { :key => 'value' }</tt></td>
+  </tr>
+</table>
+
+LiquidテンプレートからRubyのメソッド(`yield`を除く)を呼び出すことができないため、ほぼ全ての場合にlocalsを指定する必要があるでしょう:
+
+#### Markdown テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td>
+      次の何れか:
+        <a href="https://github.com/rtomayko/rdiscount" title="RDiscount">RDiscount</a>,
+        <a href="https://github.com/vmg/redcarpet" title="RedCarpet">RedCarpet</a>,
+        <a href="http://deveiate.org/projects/BlueCloth" title="BlueCloth">BlueCloth</a>,
+        <a href="http://kramdown.rubyforge.org/" title="kramdown">kramdown</a>,
+        <a href="http://maruku.rubyforge.org/" title="maruku">maruku</a>
+    </td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.markdown</tt>, <tt>.mkd</tt> and <tt>.md</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>markdown :index, :layout_engine => :erb</tt></td>
+  </tr>
+</table>
+
+Markdownからメソッドを呼び出すことも、localsに変数を渡すこともできません。
+それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
+
+``` ruby
+erb :overview, :locals => { :text => markdown(:introduction) }
+```
+
+ノート: 他のテンプレート内で`markdown`メソッドを呼び出せます。
+
+``` ruby
+%h1 Hello From Haml!
+%p= markdown(:greetings)
+```
+
+MarkdownからはRubyを呼ぶことができないので、Markdownで書かれたレイアウトを使うことはできません。しかしながら、`:layout_engine`オプションを渡すことでテンプレートのものとは異なるレンダリングエンジンをレイアウトのために使うことができます。
+
+
+#### Textile テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://redcloth.org/" title="RedCloth">RedCloth</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.textile</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>textile :index, :layout_engine => :erb</tt></td>
+  </tr>
+</table>
+
+Textileからメソッドを呼び出すことも、localsに変数を渡すこともできません。
+それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
+
+``` ruby
+erb :overview, :locals => { :text => textile(:introduction) }
+```
+
+ノート: 他のテンプレート内で`textile`メソッドを呼び出せます。
+
+``` ruby
+%h1 Hello From Haml!
+%p= textile(:greetings)
+```
+
+TexttileからはRubyを呼ぶことができないので、Textileで書かれたレイアウトを使うことはできません。しかしながら、`:layout_engine`オプションを渡すことでテンプレートのものとは異なるレンダリングエンジンをレイアウトのために使うことができます。
+
+``` ruby
+erb :overview, :locals => { :text => textile(:introduction) }
+```
+
+#### RDoc テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://rdoc.rubyforge.org/" title="RDoc">RDoc</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.rdoc</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>rdoc :README, :layout_engine => :erb</tt></td>
+  </tr>
+</table>
+
+RDocからメソッドを呼び出すことも、localsに変数を渡すこともできません。
+それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
+
+``` ruby
+erb :overview, :locals => { :text => rdoc(:introduction) }
+```
+
+ノート: 他のテンプレート内で`rdoc`メソッドを呼び出せます。
+
+
+``` ruby
+%h1 Hello From Haml!
+%p= rdoc(:greetings)
+```
+
+RDocからはRubyを呼ぶことができないので、RDocで書かれたレイアウトを使うことはできません。しかしながら、`:layout_engine`オプションを渡すことでテンプレートのものとは異なるレンダリングエンジンをレイアウトのために使うことができます。
+
+#### Radius テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://radius.rubyforge.org/" title="Radius">Radius</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.radius</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>radius :index, :locals => { :key => 'value' }</tt></td>
+  </tr>
+</table>
+
+RadiusテンプレートからRubyのメソッドを直接呼び出すことができないため、ほぼ全ての場合にlocalsを指定する必要があるでしょう。
+
+
+#### Markaby テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://markaby.github.com/" title="Markaby">Markaby</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.mab</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>markaby { h1 "Welcome!" }</tt></td>
+  </tr>
+</table>
+
+インラインテンプレート用にブロックを取ることもできます（例を参照）。
+
+#### RABL テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="https://github.com/nesquena/rabl" title="Rabl">Rabl</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.rabl</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>rabl :index</tt></td>
+  </tr>
+</table>
+
+#### Slim テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="http://slim-lang.com/" title="Slim Lang">Slim Lang</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.slim</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>slim :index</tt></td>
+  </tr>
+</table>
+
+#### Creole テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="https://github.com/minad/creole" title="Creole">Creole</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.creole</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>creole :wiki, :layout_engine => :erb</tt></td>
+  </tr>
+</table>
+
+Creoleからメソッドを呼び出すことも、localsに変数を渡すこともできません。
+それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
+
+``` ruby
+erb :overview, :locals => { :text => creole(:introduction) }
+```
+
+ノート: 他のテンプレート内で`creole`メソッドを呼び出せます。
+
+``` ruby
+%h1 Hello From Haml!
+%p= creole(:greetings)
+```
+
+CreoleからはRubyを呼ぶことができないので、Creoleで書かれたレイアウトを使うことはできません。しかしながら、`:layout_engine`オプションを渡すことでテンプレートのものとは異なるレンダリングエンジンをレイアウトのために使うことができます。
+
+#### CoffeeScript テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td>
+      <a href="https://github.com/josh/ruby-coffee-script" title="Ruby CoffeeScript">
+        CoffeeScript
+      </a> および 
+      <a href="https://github.com/sstephenson/execjs/blob/master/README.md#readme" title="ExecJS">
+        JavaScriptの起動方法
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.coffee</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>coffee :index</tt></td>
+  </tr>
+</table>
+
+#### Stylus テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td>
+      <a href="https://github.com/lucasmazza/ruby-stylus" title="Ruby Stylus">
+        Stylus
+      </a> および 
+      <a href="https://github.com/sstephenson/execjs/blob/master/README.md#readme" title="ExecJS">
+        JavaScriptの起動方法
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.styl</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>stylus :index</tt></td>
+  </tr>
+</table>
+
+Stylusテンプレートを使えるようにする前に、まず`stylus`と`stylus/tilt`を読み込む必要があります。
+
+``` ruby
+require 'sinatra'
+require 'stylus'
+require 'stylus/tilt'
+
+get '/' do
+  stylus :example
+end
+```
+
+#### Yajl テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="https://github.com/brianmario/yajl-ruby" title="yajl-ruby">yajl-ruby</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.yajl</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td>
+      <tt>
+        yajl :index,
+             :locals => { :key => 'qux' },
+             :callback => 'present',
+             :variable => 'resource'
+      </tt>
+    </td>
+  </tr>
+</table>
+
+
+テンプレートのソースはRubyの文字列として評価され、その結果のJSON変数は`#to_json`を使って変換されます。
+
+``` ruby
+json = { :foo => 'bar' }
+json[:baz] = key
+```
+
+`:callback`および`:variable`オプションは、レンダリングされたオブジェクトを装飾するために使うことができます。
+
+``` ruby
+var resource = {"foo":"bar","baz":"qux"}; present(resource);
+```
+
+#### WLang テンプレート
+
+<table>
+  <tr>
+    <td>依存</td>
+    <td><a href="https://github.com/blambeau/wlang/" title="wlang">wlang</a></td>
+  </tr>
+  <tr>
+    <td>ファイル拡張子</td>
+    <td><tt>.wlang</tt></td>
+  </tr>
+  <tr>
+    <td>例</td>
+    <td><tt>wlang :index, :locals => { :key => 'value' }</tt></td>
+  </tr>
+</table>
+
+WLang内でのRubyメソッドの呼び出しは一般的ではないので、ほとんどの場合にlocalsを指定する必要があるでしょう。しかしながら、WLangで書かれたレイアウトは`yield`をサポートしています。
 
 ### テンプレート内で変数にアクセスする
 
-テンプレートはルートハンドラと同じコンテキストの中で評価されます。.
-ルートハンドラでセットされたインスタンス変数は
-テンプレート内で直接使うことができます。
+テンプレートはルートハンドラと同じコンテキストの中で評価されます。ルートハンドラでセットされたインスタンス変数はテンプレート内で直接使うことができます。
 
 ``` ruby
 get '/:id' do
@@ -679,18 +903,54 @@ get '/:id' do
 end
 ```
 
-ローカル変数を明示的に定義することもできます。
+また、ローカル変数のハッシュで明示的に指定することもできます。
 
 ``` ruby
 get '/:id' do
   foo = Foo.find(params[:id])
-  haml '%h1= foo.name', :locals => { :foo => foo }
+  haml '%h1= bar.name', :locals => { :bar => foo }
 end
 ```
 
 このやり方は他のテンプレート内で部分テンプレートとして表示する時に典型的に使用されます。
 
-### ファイル内テンプレート
+### `yield`を伴うテンプレートとネストしたレイアウト
+
+レイアウトは通常`yield`を呼ぶ単なるテンプレートに過ぎません。
+そのようなテンプレートは、既に説明した`:template`オプションを通して使われるか、または次のようなブロックを伴ってレンダリングされます。
+
+``` ruby
+erb :post, :layout => false do
+  erb :index
+end
+```
+
+このコードは、`erb :index, :layout => :post`とほぼ等価です。
+
+レンダリングメソッドにブロックを渡すスタイルは、ネストしたレイアウトを作るために最も役立ちます。
+
+``` ruby
+erb :main_layout, :layout => false do
+  erb :admin_layout do
+    erb :user
+  end
+end
+```
+
+これはまた次のより短いコードでも達成できます。
+
+``` ruby
+erb :admin_layout, :layout => :main_layout do
+  erb :user
+end
+```
+
+現在、次のレンダリングメソッドがブロックを取れます: `erb`, `haml`,
+`liquid`, `slim `, `wlang`.
+また汎用の`render`メソッドもブロックを取れます。
+
+
+### インラインテンプレート
 
 テンプレートはソースファイルの最後で定義することもできます。
 
@@ -712,14 +972,11 @@ __END__
 %div.title Hello world!!!!!
 ```
 
-注意:
-sinatraをrequireするファイル内で定義されたファイル内テンプレートは自動的に読み込まれます。
-他のファイルで定義されているテンプレートを使うには
-`enable :inline_templates`を明示的に呼んでください。
+ノート: sinatraをrequireするソースファイル内で定義されたインラインテンプレートは自動的に読み込まれます。他のソースファイル内にインラインテンプレートがある場合には`enable :inline_templates`を明示的に呼んでください。
 
 ### 名前付きテンプレート
 
-テンプレートはトップレベルの`template`メソッドで定義することができます。
+テンプレートはトップレベルの`template`メソッドで定義することもできます。
 
 ``` ruby
 template :layout do
@@ -735,14 +992,40 @@ get '/' do
 end
 ```
 
-「layout」というテンプレートが存在する場合、そのテンプレートファイルは他のテンプレートが
-表示される度に使用されます。`:layout => false`することでlayoutsを無効にできます。
+「layout」というテンプレートが存在する場合、そのテンプレートファイルは他のテンプレートがレンダリングされる度に使用されます。`:layout => false`で個別に、または`set :haml, :layout => false`でデフォルトとして、レイアウトを無効にすることができます。
 
 ``` ruby
 get '/' do
   haml :index, :layout => !request.xhr?
 end
 ```
+
+### ファイル拡張子の関連付け
+
+任意のテンプレートエンジンにファイル拡張子を関連付ける場合は、`Tilt.register`を使います。例えば、Textileテンプレートに`tt`というファイル拡張子を使いたい場合は、以下のようにします。
+
+``` ruby
+Tilt.register :tt, Tilt[:textile]
+```
+
+### オリジナルテンプレートエンジンの追加
+
+まず、Tiltでそのエンジンを登録し、次にレンダリングメソッドを作ります。
+
+``` ruby
+Tilt.register :myat, MyAwesomeTemplateEngine
+
+helpers do
+  def myat(*args) render(:myat, *args) end
+end
+
+get '/' do
+  myat :index
+end
+```
+
+これは、`./views/index.myat`をレンダリングします。Tiltについての詳細は、https://github.com/rtomayko/tilt を参照してください。
+
 
 ## ヘルパー
 

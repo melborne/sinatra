@@ -1108,6 +1108,55 @@ helpers FooUtils, BarUtils
 
 その効果は、アプリケーションクラスにモジュールをインクルードするのと同じです。
 
+
+### セッションの使用
+
+セッションはリクエスト間での状態維持のために使用されます。その起動により、ユーザセッションごとに一つのセッションハッシュが与えられます。
+
+``` ruby
+enable :sessions
+
+get '/' do
+  "value = " << session[:value].inspect
+end
+
+get '/:value' do
+  session[:value] = params[:value]
+end
+```
+
+ノート: `enable :sessions`は実際にはすべてのデータをクッキーに保持します。これは必ずしも期待通りのものにならないかもしれません（例えば、大量のデータを保持することでトラフィックが増大するなど）。Rackセッションmiddlewareの利用が可能であり、その場合は`enable :sessions`を呼ばずに、選択したmiddlewareを他のmiddlewareのときと同じようにして取り込んでください。
+
+``` ruby
+use Rack::Session::Pool, :expire_after => 2592000
+
+get '/' do
+  "value = " << session[:value].inspect
+end
+
+get '/:value' do
+  session[:value] = params[:value]
+end
+```
+
+セキュリティ向上のため、クッキー内のセッションデータはセッションシークレットで署名されます。Sinatraによりランダムなシークレットが個別に生成されます。しかし、このシークレットはアプリケーションの立ち上げごとに変わってしまうので、すべてのアプリケーションのインスタンスで共有できるシークレットをセットしたくなるかもしれません。
+
+``` ruby
+set :session_secret, 'super secret'
+```
+
+更に、設定変更をしたい場合は、`sessions`の設定においてオプションハッシュを保持することもできます。
+
+``` ruby
+set :sessions, :domain => 'foo.com'
+```
+
+foo.comのサブドメイン上のアプリ間でセッションを共有化したいときは、代わりにドメインの前に*.*を付けます。
+
+``` ruby
+set :sessions, :domain => '.foo.com'
+```
+
 ## 強制終了
 
 ルーティングかbeforeフィルタ内で直ちに実行を終了する方法:

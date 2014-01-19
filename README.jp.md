@@ -1460,17 +1460,19 @@ whatever it will find in `env['rack.logger']`.
 
 ### MIMEタイプ(Mime Types)
 
-`send_file`か静的ファイルを使う時、Sinatraが理解でいないMIMEタイプがある場合があります。
-その時は `mime_type` を使ってファイル拡張子毎に登録して下さい。
+`send_file`か静的ファイルを使う時、SinatraがMIMEタイプを理解できない場合があります。その時は `mime_type` を使ってファイル拡張子毎に登録して下さい。
 
 ``` ruby
 mime_type :foo, 'text/foo'
 ```
 
-これはcontent\_typeヘルパーで利用することができます:
+これは`content_type`ヘルパーで利用することができます:
 
 ``` ruby
-content_type :foo
+get '/' do
+  content_type :foo
+  "foo foo foo"
+end
 ```
 
 ### URLの生成
@@ -1680,33 +1682,38 @@ The options are:
 
 ## リクエストオブジェクトへのアクセス(Accessing the Request Object)
 
-受信するリクエストオブジェクトは、\`request\`メソッドを通じてリクエストレベル(フィルタ、ルーティング、エラーハンドラ)からアクセスすることができます:
+受信するリクエストオブジェクトは、`request`メソッドを通じてリクエストレベル(フィルタ、ルーティング、エラーハンドラ)からアクセスすることができます:
 
 ``` ruby
 # アプリケーションが http://example.com/example で動作している場合
 get '/foo' do
-  request.body              # クライアントによって送信されたリクエストボディ(下記参照)
-  request.scheme            # "http"
-  request.script_name       # "/example"
-  request.path_info         # "/foo"
-  request.port              # 80
-  request.request_method    # "GET"
-  request.query_string      # ""
-  request.content_length    # request.bodyの長さ
-  request.media_type        # request.bodyのメディアタイプ
-  request.host              # "example.com"
-  request.get?              # true (他の動詞についても同様のメソッドあり)
-  request.form_data?        # false
-  request["SOME_HEADER"]    # SOME_HEADERヘッダの値
-  request.referer           # クライアントのリファラまたは'/'
-  request.user_agent        # ユーザエージェント (:agent 条件によって使用される)
-  request.cookies           # ブラウザクッキーのハッシュ
-  request.xhr?              # Ajaxリクエストかどうか
-  request.url               # "http://example.com/example/foo"
-  request.path              # "/example/foo"
-  request.ip                # クライアントのIPアドレス
-  request.secure?           # false
-  request.env               # Rackによって渡された生のenvハッシュ
+  t = %w[text/css text/html application/javascript]
+  request.accept              # ['text/html', '*/*']
+  request.accept? 'text/xml'  # true
+  request.preferred_type(t)   # 'text/html'
+  request.body                # クライアントによって送信されたリクエストボディ(下記参照)
+  request.scheme              # "http"
+  request.script_name         # "/example"
+  request.path_info           # "/foo"
+  request.port                # 80
+  request.request_method      # "GET"
+  request.query_string        # ""
+  request.content_length      # request.bodyの長さ
+  request.media_type          # request.bodyのメディアタイプ
+  request.host                # "example.com"
+  request.get?                # true (他の動詞にも同種メソッドあり)
+  request.form_data?          # false
+  request["some_param"]       # some_param変数の値。[]はパラメータハッシュのショートカット
+  request.referrer            # クライアントのリファラまたは'/'
+  request.user_agent          # ユーザエージェント (:agent 条件によって使用される)
+  request.cookies             # ブラウザクッキーのハッシュ
+  request.xhr?                # Ajaxリクエストかどうか
+  request.url                 # "http://example.com/example/foo"
+  request.path                # "/example/foo"
+  request.ip                  # クライアントのIPアドレス
+  request.secure?             # false (sslではtrueになる)
+  request.forwarded?          # true (リバースプロキシの裏で動いている場合)
+  request.env                 # Rackによって渡された生のenvハッシュ
 end
 ```
 
@@ -1839,11 +1846,25 @@ method.
 
 ``` ruby
 configure do
-  ...
+  # １つのオプションをセット
+  set :option, 'value'
+
+  # 複数のオプションをセット
+  set :a => 1, :b => 2
+
+  # `set :option, true`と同じ
+  enable :option
+
+  # `set :option, false`と同じ
+  disable :option
+
+  # ブロックを使って動的な設定をすることもできます。
+  set(:css_dir) { File.join(views, 'css') }
 end
 ```
 
-環境(RACK\_ENV環境変数)が`:production`に設定されている時だけ実行する方法:
+
+環境設定(`RACK_ENV`環境変数)が`:production`に設定されている時だけ実行する方法:
 
 ``` ruby
 configure :production do
@@ -1851,10 +1872,24 @@ configure :production do
 end
 ```
 
-環境が`:production`か`:test`の場合に設定する方法:
+環境設定が`:production`か`:test`に設定されている時だけ実行する方法:
 
 ``` ruby
 configure :production, :test do
+  ...
+end
+```
+
+設定したオプションには`settings`からアクセスできます:
+
+``` ruby
+configure do
+  set :foo, 'bar'
+end
+
+get '/' do
+  settings.foo? # => true
+  settings.foo  # => 'bar'
   ...
 end
 ```

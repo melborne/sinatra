@@ -2128,13 +2128,11 @@ end
 
 ## エラーハンドリング(Error Handling)
 
-エラーハンドラーはルーティングコンテキストとbeforeフィルタ内で実行します。
-`haml`、`erb`、`halt`などを使うこともできます。
+エラーハンドラーはルーティングおよびbeforeフィルタと同じコンテキストで実行されます。すなわちこれは、`haml`、`erb`、`halt`といった便利なものが全て使えることを意味します。
 
 ### Not Found
 
-`Sinatra::NotFound`が起きた時か レスポンスのステータスコードが
-404の時に`not_found`ハンドラーが発動します。
+`Sinatra::NotFound`例外が発生したとき、またはレスポンスのステータスコードが404のときに、`not_found`ハンドラーが発動します。
 
 ``` ruby
 not_found do
@@ -2144,9 +2142,7 @@ end
 
 ### エラー(Error)
 
-`error`
-ハンドラーはルーティングブロックかbeforeフィルタ内で例外が発生した時はいつでも発動します。
-例外オブジェクトはRack変数`sinatra.error`から取得できます。
+`error`ハンドラーはルーティングブロックまたはフィルタ内で例外が発生したときはいつでも発動します。例外オブジェクトはRack変数`sinatra.error`から取得できます。
 
 ``` ruby
 error do
@@ -2162,7 +2158,7 @@ error MyCustomError do
 end
 ```
 
-と書いておいて,下記のように呼び出します。
+と書いておいて、下記のように呼び出します。
 
 ``` ruby
 get '/' do
@@ -2196,20 +2192,14 @@ error 400..510 do
 end
 ```
 
-開発環境として実行している場合、Sinatraは特別な`not_found`と`error`ハンドラーを
-インストールしています。
+Sinatraを開発環境の下で実行している場合は、特別な`not_found`および`error`ハンドラーが導入され、これは親切なスタックトレースと追加のデバッギング情報をブラウザに表示します。
 
 
 ## Rackミドルウェア(Rack Middleware)
 
-[SinatraはRack](http://rack.rubyforge.org/)フレームワーク用の
-最小限の標準インターフェース
-上で動作しています。Rack中でもアプリケーションデベロッパー
-向けに一番興味深い機能はミドルウェア(サーバとアプリケーション間に介在し、モニタリング、HTTPリクエストとレスポンス
-の手動操作ができるなど、一般的な機能のいろいろなことを提供するもの)をサポートすることです。
+SinatraはRuby製Webフレームワークのミニマルな標準的インタフェースである[Rack](http://rack.rubyforge.org/)上に構築されています。アプリケーションデベロッパーにとってRackにおける最も興味深い機能は、「ミドルウェア(middleware)」をサポートしていることであり、これは、サーバとアプリケーションとの間に置かれ、HTTPリクエスト/レスポンスを監視および/または操作することで、各種の汎用的機能を提供するコンポーネントです。
 
-Sinatraではトップレベルの`use`
-メソッドを使ってRackにパイプラインを構築します。
+Sinatraはトップレベルの`use`メソッドを通して、Rackミドルウェアパイプラインの構築を楽にします。
 
 ``` ruby
 require 'sinatra'
@@ -2223,10 +2213,7 @@ get '/hello' do
 end
 ```
 
-`use`
-[Rack::Builder](http://rack.rubyforge.org/doc/classes/Rack/Builder.html)
-DSLで定義されていることと全て一致します。 例えば `use`
-メソッドはブロック構文のように複数の引数を受け取ることができます。
+`use`の文法は、[Rack::Builder](http://rack.rubyforge.org/doc/classes/Rack/Builder.html)DSLで定義されているそれ（rackupファイルで最もよく使われる）と同じです。例えば `use`メソッドは複数の引数、そしてブロックも取ることができます。
 
 ``` ruby
 use Rack::Auth::Basic do |username, password|
@@ -2234,17 +2221,22 @@ use Rack::Auth::Basic do |username, password|
 end
 ```
 
-Rackはログ、デバッギング、URLルーティング、認証、セッションなどいろいろな機能を備えた標準的ミドルウェアです。
-Sinatraはその多くのコンポーネントを自動で使うよう基本設定されているため、`use`で明示的に指定する必要はありません。
+Rackは、ロギング、デバッギング、URLルーティング、認証、セッション管理など、多様な標準的ミドルウェアを共に配布されています。Sinatraはその多くのコンポーネントを自動で使うよう基本設定されているため、通常、それらを`use`で明示的に指定する必要はありません。
+
+便利なミドルウェアを以下で見つけられます。
+
+[rack](https://github.com/rack/rack/tree/master/lib/rack),
+[rack-contrib](https://github.com/rack/rack-contrib#readm),
+with [CodeRack](http://coderack.org/) or in the
+[Rack wiki](https://github.com/rack/rack/wiki/List-of-Middleware).
 
 ## テスト(Testing)
 
-SinatraでのテストはRack-basedのテストライブラリかフレームワークを使って書くことができます。
-[Rack::Test](http://gitrdoc.com/brynary/rack-test)
-をおすすめします。やり方:
+SinatraでのテストはRackベースのテストライブラリまたはフレームワークを使って書くことができます。[Rack::Test](http://rdoc.info/github/brynary/rack-test/master/frames)をお薦めします。
 
 ``` ruby
 require 'my_sinatra_app'
+require 'test/unit'
 require 'rack/test'
 
 class MyAppTest < Test::Unit::TestCase
@@ -2266,21 +2258,16 @@ class MyAppTest < Test::Unit::TestCase
 
   def test_with_rack_env
     get '/', {}, 'HTTP_USER_AGENT' => 'Songbird'
-    assert_equal "あなたはSongbirdを使ってますね!", last_response.body
+    assert_equal "You're using Songbird!", last_response.body
   end
 end
 ```
 
-注意: ビルトインのSinatra::TestモジュールとSinatra::TestHarnessクラスは
-0.9.2リリース以降、廃止予定になっています。
+ノート: モジュラースタイルでSinatraを使う場合は、上記`Sinatra::Application`をアプリケーションのクラス名に置き換えてください。
 
 ## Sinatra::Base - ミドルウェア、ライブラリおよびモジュラーアプリ
 
-トップレベル(グローバル領域)上でいろいろ定義していくのは軽量アプリならうまくいきますが、
-RackミドルウェアやRails metal、サーバのコンポーネントを含んだシンプルな
-ライブラリやSinatraの拡張プログラムを考慮するような場合はそうとは限りません。
-トップレベルのDSLがネームスペースを汚染したり、設定を変えてしまうこと(例:./publicや./view)がありえます。
-そこでSinatra::Baseの出番です。
+軽量なアプリケーションであれば、トップレベルでアプリケーションを定義していくことはうまくいきますが、再利用性可能なコンポーネント、例えばRackミドルウェア、RailsのMetal、サーバコンポーネントを含むシンプルなライブラリ、あるいはSinatraの拡張プログラムを構築するような場合、これは無視できない欠点を持つものとなります。トップレベルは、軽量なアプリケーションのスタイルにおける設定（例えば、単一のアプリケーションファイル、`./public`および`./views`ディレクトリ、ロギング、例外詳細ページなど）を仮定しています。そこで`Sinatra::Base`の出番です。
 
 ``` ruby
 require 'sinatra/base'
@@ -2295,64 +2282,40 @@ class MyApp < Sinatra::Base
 end
 ```
 
-このMyAppは独立したRackコンポーネントで、RackミドルウェアやRackアプリケーション
-Rails metalとして使用することができます。`config.ru`ファイル内で `use`
-か、または `run`
-でこのクラスを指定するか、ライブラリとしてサーバコンポーネントをコントロールします。
+The methods available to `Sinatra::Base` subclasses are exactly the same as those
+available via the top-level DSL. Most top-level apps can be converted to
+`Sinatra::Base` components with two modifications:
 
-``` ruby
-MyApp.run! :host => 'localhost', :port => 9090
-```
+`Sinatra::Base`のサブクラスで利用できるメソッドは、トップレベルDSLで利用できるものと全く同じです。ほとんどのトップレベルで記述されたアプリは、以下の２点を修正することで`Sinatra::Base`コンポーネントに変えることができます。
 
-Sinatra::Baseのサブクラスで使えるメソッドはトップレベルのDSLを経由して確実に使うことができます。
-ほとんどのトップレベルで記述されたアプリは、以下の２点を修正することでSinatra::Baseコンポーネントに変えることができます。
+* `sinatra`の代わりに`sinatra/base`を読み込む
 
--   `sinatra`の代わりに`sinatra/base`を読み込む
+(そうしない場合、SinatraのDSLメソッドの全てがmainの名前空間にインポートされます)
 
-(そうしない場合、SinatraのDSLメソッドの全てがメインネームスペースにインポートされます)
+* ルーティング、エラーハンドラー、フィルター、オプションを`Sinatra::Base`のサブクラスに書く
 
--   ルーティング、エラーハンドラー、フィルター、オプションをSinatra::Baseのサブクラスに書く
 
-`Sinatra::Base`
-はまっさらです。ビルトインサーバを含む、ほとんどのオプションがデフォルト
-で無効になっています。オプション詳細については[Options and
-Configuration](http://sinatra.github.com/configuration.html)
-をご覧下さい。
-
-補足:
-SinatraのトップレベルDSLはシンプルな委譲(delgation)システムで実装されています。
-`Sinatra::Application`クラス(Sinatra::Baseの特別なサブクラス)は、トップレベルに送られる
-:get、 :put、 :post、:delete、 :before、:error、:not\_found、
-:configure、:set messagesのこれら 全てを受け取ります。
-詳細を閲覧されたい方はこちら(英語): [Sinatra::Delegator
-mixin](http://github.com/sinatra/sinatra/blob/master/lib/sinatra/base.rb#L1064)
-[included into the main
-namespace](http://github.com/sinatra/sinatra/blob/master/lib/sinatra/main.rb#L25).
+`Sinatra::Base`はまっさらです。ビルトインサーバを含む、ほとんどのオプションがデフォルトで無効になっています。利用可能なオプションとその挙動の詳細については[Configuring Settings](http://sinatra.github.com/configuration.html)(英語)をご覧下さい。
 
 ### モジュラースタイル vs クラッシックスタイル(Modular vs. Classic Style)
 
-Contrary to common belief, there is nothing wrong with the classic style. If it
-suits your application, you do not have to switch to a modular application.
+一般的認識と違って、クラッシックスタイルを使うことに問題はなにもありません。それがそのアプリケーションに合っているのであれば、モジュラーアプリケーションに移行する必要はありません。
 
-The main disadvantage of using the classic style rather than the modular style is that
-you will only have one Sinatra application per Ruby process. If you plan to use
-more than one, switch to the modular style. There is no reason you cannot mix
-the modular and the classic styles.
+モジュラースタイルを使わずにクラッシックスタイルを使った場合の一番の不利な点は、Rubyプロセスごとにただ一つのSinatraアプリケーションしか持てない点です。複数が必要な場合はモジュラースタイルに移行してください。モジュラースタイルとクラッシックスタイルを混合できないということはありません。
 
-If switching from one style to the other, you should be aware of slightly
-different default settings:
+一方のスタイルから他方へ移行する場合、デフォルト設定がわずかに異なる点に注意が必要です。
 
 <table>
   <tr>
-    <th>Setting</th>
-    <th>Classic</th>
-    <th>Modular</th>
+    <th>設定</th>
+    <th>クラッシック</th>
+    <th>モジュラー</th>
   </tr>
 
   <tr>
     <td>app_file</td>
-    <td>file loading sinatra</td>
-    <td>file subclassing Sinatra::Base</td>
+    <td>sinatraを読み込むファイル</td>
+    <td>Sinatra::Baseをサブクラス化したファイル</td>
   </tr>
 
   <tr>
@@ -2386,38 +2349,39 @@ different default settings:
   </tr>
 </table>
 
+
 ### モジュラーアプリケーションの提供(Serving a Modular Application)
 
-There are two common options for starting a modular app, actively starting with
-`run!`:
+モジュラーアプリケーションを開始、つまり`run!`を使って開始させる二種類のやり方があります。
+
 
 ``` ruby
 # my_app.rb
 require 'sinatra/base'
 
 class MyApp < Sinatra::Base
-  # ... app code here ...
+  # ... アプリケーションのコードを書く ...
 
-  # start the server if ruby file executed directly
+  # Rubyファイルが直接実行されたらサーバを立ち上げる
   run! if app_file == $0
 end
 ```
 
-Start with:
+として、次のように起動するか、
 
 ``` shell
 ruby my_app.rb
 ```
 
-Or with a `config.ru` file, which allows using any Rack handler:
+または、Rackハンドラを使えるようにする`config.ru`ファイルを書いて、
 
 ``` ruby
-# config.ru (run with rackup)
+# config.ru (rackupで起動)
 require './my_app'
 run MyApp
 ```
 
-Run:
+起動します。
 
 ``` shell
 rackup -p 4567
@@ -2425,7 +2389,7 @@ rackup -p 4567
 
 ### config.ruを用いたクラッシックスタイルアプリケーションの使用
 
-Write your app file:
+アプリケーションファイルと、
 
 ``` ruby
 # app.rb
@@ -2436,7 +2400,7 @@ get '/' do
 end
 ```
 
-And a corresponding `config.ru`:
+対応する`config.ru`を書きます。
 
 ``` ruby
 require './app'
@@ -2445,16 +2409,13 @@ run Sinatra::Application
 
 ### config.ruはいつ使うのか？
 
-A `config.ru` file is recommended if:
+`config.ru`ファイルは、以下の場合に適しています。
 
-* You want to deploy with a different Rack handler (Passenger, Unicorn,
-  Heroku, ...).
-* You want to use more than one subclass of `Sinatra::Base`.
-* You want to use Sinatra only for middleware, and not as an endpoint.
+* 異なるRackハンドラ(Passenger, Unicorn, Herokuなど)でデプロイしたいとき
+* `Sinatra::Base`の複数のサブクラスを使いたいとき
+* Sinatraをミドルウェアとして利用し、エンドポイントとしては利用しないとき
 
-**There is no need to switch to a `config.ru` simply because you
-switched to the modular style, and you don't have to use the modular style for running
-with a `config.ru`.**
+**モジュラースタイルに移行したという理由だけで、`config.ru`に移行する必要はなく、`config.ru`で起動するためにモジュラースタイルを使う必要はありません。**
 
 ### Sinatraのミドルウェアとしての利用(Using Sinatra as Middleware)
 
@@ -2481,12 +2442,12 @@ class LoginScreen < Sinatra::Base
 end
 
 class MyApp < Sinatra::Base
-  # middleware will run before filters
+  # ミドルウェアはbeforeフィルタの前に実行される
   use LoginScreen
 
   before do
     unless session['user_name']
-      halt "Access denied, please <a href='/login'>login</a>."
+      halt "アクセスは拒否されました。<a href='/login'>ログイン</a>してください。"
     end
   end
 
@@ -2496,8 +2457,7 @@ end
 
 ### 動的なアプリケーションの生成(Dynamic Application Creation)
 
-Sometimes you want to create new applications at runtime without having to
-assign them to a constant. You can do this with `Sinatra.new`:
+新しいアプリケーションを実行時に、定数に割り当てることなく生成したくなる場合があるでしょう。`Sinatra.new`を使えばそれができます。
 
 ``` ruby
 require 'sinatra/base'
@@ -2505,10 +2465,10 @@ my_app = Sinatra.new { get('/') { "hi" } }
 my_app.run!
 ```
 
-It takes the application to inherit from as an optional argument:
+これは省略できる引数として、それが継承するアプリケーションを取ります。
 
 ```ruby
-# config.ru (run with rackup)
+# config.ru (rackupで起動)
 require 'sinatra/base'
 
 controller = Sinatra.new do
@@ -2525,10 +2485,9 @@ map('/b') do
 end
 ```
 
-This is especially useful for testing Sinatra extensions or using Sinatra in
-your own library.
+これは特にSinatraのextensionをテストするときや、Sinatraを自身のライブラリで利用する場合に役立ちます。
 
-This also makes using Sinatra as middleware extremely easy:
+これはまた、Sinatraをミドルウェアとして利用することを極めて簡単にします。
 
 ``` ruby
 require 'sinatra/base'

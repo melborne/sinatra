@@ -1212,6 +1212,386 @@ end
 
 ルーティングブロックからすぐに抜け出し、次にマッチするルーティングを実行します。マッチするルーティングが見当たらない場合は404が返されます。
 
+### Triggering Another Route
+
+Sometimes `pass` is not what you want, instead you would like to get the result
+of calling another route. Simply use `call` to achieve this:
+
+``` ruby
+get '/foo' do
+  status, headers, body = call env.merge("PATH_INFO" => '/bar')
+  [status, headers, body.map(&:upcase)]
+end
+
+get '/bar' do
+  "bar"
+end
+```
+
+Note that in the example above, you would ease testing and increase performance
+by simply moving `"bar"` into a helper used by both `/foo`
+and `/bar`.
+
+If you want the request to be sent to the same application instance rather than
+a duplicate, use `call!` instead of `call`.
+
+Check out the Rack specification if you want to learn more about `call`.
+
+### Setting Body, Status Code and Headers
+
+It is possible and recommended to set the status code and response body with the
+return value of the route block. However, in some scenarios you might want to
+set the body at an arbitrary point in the execution flow. You can do so with the
+`body` helper method. If you do so, you can use that method from there on to
+access the body:
+
+``` ruby
+get '/foo' do
+  body "bar"
+end
+
+after do
+  puts body
+end
+```
+
+It is also possible to pass a block to `body`, which will be executed by the
+Rack handler (this can be used to implement streaming, see "Return Values").
+
+Similar to the body, you can also set the status code and headers:
+
+``` ruby
+get '/foo' do
+  status 418
+  headers \
+    "Allow"   => "BREW, POST, GET, PROPFIND, WHEN",
+    "Refresh" => "Refresh: 20; http://www.ietf.org/rfc/rfc2324.txt"
+  body "I'm a tea pot!"
+end
+```
+
+Like `body`, `headers` and `status` with no arguments can be used to access
+their current values.
+
+### Streaming Responses
+
+Sometimes you want to start sending out data while still generating parts of
+the response body. In extreme examples, you want to keep sending data until
+the client closes the connection. You can use the `stream` helper to avoid
+creating your own wrapper:
+
+``` ruby
+get '/' do
+  stream do |out|
+    out << "It's gonna be legen -\n"
+    sleep 0.5
+    out << " (wait for it) \n"
+    sleep 1
+    out << "- dary!\n"
+  end
+end
+```
+
+This allows you to implement streaming APIs,
+[Server Sent Events](http://dev.w3.org/html5/eventsource/), and can be used as
+the basis for [WebSockets](http://en.wikipedia.org/wiki/WebSocket). It can also be
+used to increase throughput if some but not all content depends on a slow
+resource.
+
+Note that the streaming behavior, especially the number of concurrent requests,
+highly depends on the web server used to serve the application. Some servers,
+like WEBRick, might not even support streaming at all. If the server does not
+support streaming, the body will be sent all at once after the block passed to
+`stream` finishes executing. Streaming does not work at all with Shotgun.
+
+If the optional parameter is set to `keep_open`, it will not call `close` on
+the stream object, allowing you to close it at any later point in the
+execution flow. This only works on evented servers, like Thin and Rainbows.
+Other servers will still close the stream:
+
+``` ruby
+# long polling
+
+set :server, :thin
+connections = []
+
+get '/subscribe' do
+  # register a client's interest in server events
+  stream(:keep_open) { |out| connections << out }
+
+  # purge dead connections
+  connections.reject!(&:closed?)
+
+  # acknowledge
+  "subscribed"
+end
+
+post '/message' do
+  connections.each do |out|
+    # notify client that a new message has arrived
+    out << params[:message] << "\n"
+
+    # indicate client to connect again
+    out.close
+  end
+
+  # acknowledge
+  "message received"
+end
+```
+
+### Logging
+
+In the request scope, the `logger` helper exposes a `Logger` instance:
+
+``` ruby
+get '/' do
+  logger.info "loading data"
+  # ...
+end
+```
+
+This logger will automatically take your Rack handler's logging settings into
+account. If logging is disabled, this method will return a dummy object, so
+you do not have to worry about it in your routes and filters.
+
+Note that logging is only enabled for `Sinatra::Application` by
+default, so if you inherit from `Sinatra::Base`, you probably want to
+enable it yourself:
+
+``` ruby
+class MyApp < Sinatra::Base
+  configure :production, :development do
+    enable :logging
+  end
+end
+```
+
+To avoid any logging middleware to be set up, set the `logging` setting to
+`nil`. However, keep in mind that `logger` will in that case return `nil`. A
+common use case is when you want to set your own logger. Sinatra will use
+whatever it will find in `env['rack.logger']`.
+
+
+### MIMEタイプ
+
+`send_file`か静的ファイルを使う時、Sinatraが理解でいないMIMEタイプがある場合があります。
+その時は `mime_type` を使ってファイル拡張子毎に登録して下さい。
+
+``` ruby
+mime_type :foo, 'text/foo'
+```
+
+これはcontent\_typeヘルパーで利用することができます:
+
+``` ruby
+content_type :foo
+```
+
+### Generating URLs
+
+For generating URLs you should use the `url` helper method, for instance, in
+Haml:
+
+``` ruby
+%a{:href => url('/foo')} foo
+```
+
+It takes reverse proxies and Rack routers into account, if present.
+
+This method is also aliased to `to` (see below for an example).
+
+### Browser Redirect
+
+You can trigger a browser redirect with the `redirect` helper method:
+
+``` ruby
+get '/foo' do
+  redirect to('/bar')
+end
+```
+
+Any additional parameters are handled like arguments passed to `halt`:
+
+``` ruby
+redirect to('/bar'), 303
+redirect 'http://google.com', 'wrong place, buddy'
+```
+
+You can also easily redirect back to the page the user came from with
+`redirect back`:
+
+``` ruby
+get '/foo' do
+  "<a href='/bar'>do something</a>"
+end
+
+get '/bar' do
+  do_something
+  redirect back
+end
+```
+
+To pass arguments with a redirect, either add them to the query:
+
+``` ruby
+redirect to('/bar?sum=42')
+```
+
+Or use a session:
+
+``` ruby
+enable :sessions
+
+get '/foo' do
+  session[:secret] = 'foo'
+  redirect to('/bar')
+end
+
+get '/bar' do
+  session[:secret]
+end
+```
+
+### Cache Control
+
+Setting your headers correctly is the foundation for proper HTTP caching.
+
+You can easily set the Cache-Control header like this:
+
+``` ruby
+get '/' do
+  cache_control :public
+  "cache it!"
+end
+```
+
+Pro tip: Set up caching in a before filter:
+
+``` ruby
+before do
+  cache_control :public, :must_revalidate, :max_age => 60
+end
+```
+
+If you are using the `expires` helper to set the corresponding header,
+`Cache-Control` will be set automatically for you:
+
+``` ruby
+before do
+  expires 500, :public, :must_revalidate
+end
+```
+
+To properly use caches, you should consider using `etag` or `last_modified`.
+It is recommended to call those helpers *before* doing any heavy lifting, as they
+will immediately flush a response if the client already has the current
+version in its cache:
+
+``` ruby
+get '/article/:id' do
+  @article = Article.find params[:id]
+  last_modified @article.updated_at
+  etag @article.sha1
+  erb :article
+end
+```
+
+It is also possible to use a
+[weak ETag](http://en.wikipedia.org/wiki/HTTP_ETag#Strong_and_weak_validation):
+
+``` ruby
+etag @article.sha1, :weak
+```
+
+These helpers will not do any caching for you, but rather feed the necessary
+information to your cache. If you are looking for a quick reverse-proxy caching
+solution, try [rack-cache](https://github.com/rtomayko/rack-cache):
+
+``` ruby
+require "rack/cache"
+require "sinatra"
+
+use Rack::Cache
+
+get '/' do
+  cache_control :public, :max_age => 36000
+  sleep 5
+  "hello"
+end
+```
+
+Use the `:static_cache_control` setting (see below) to add
+`Cache-Control` header info to static files.
+
+According to RFC 2616, your application should behave differently if the If-Match
+or If-None-Match header is set to `*`, depending on whether the resource
+requested is already in existence. Sinatra assumes resources for safe (like get)
+and idempotent (like put) requests are already in existence, whereas other
+resources (for instance post requests) are treated as new resources. You
+can change this behavior by passing in a `:new_resource` option:
+
+``` ruby
+get '/create' do
+  etag '', :new_resource => true
+  Article.create
+  erb :new_article
+end
+```
+
+If you still want to use a weak ETag, pass in a `:kind` option:
+
+``` ruby
+etag '', :new_resource => true, :kind => :weak
+```
+
+### Sending Files
+
+For sending files, you can use the `send_file` helper method:
+
+``` ruby
+get '/' do
+  send_file 'foo.png'
+end
+```
+
+It also takes options:
+
+``` ruby
+send_file 'foo.png', :type => :jpg
+```
+
+The options are:
+
+<dl>
+  <dt>filename</dt>
+    <dd>file name, in response, defaults to the real file name.</dd>
+
+  <dt>last_modified</dt>
+    <dd>value for Last-Modified header, defaults to the file's mtime.</dd>
+
+  <dt>type</dt>
+    <dd>content type to use, guessed from the file extension if missing.</dd>
+
+  </dt>disposition</dt>
+    <dd>
+      used for Content-Disposition, possible value: <tt>nil</tt> (default),
+      <tt>:attachment</tt> and <tt>:inline</tt>
+    </dd>
+
+  <dt>length</dt>
+    <dd>Content-Length header, defaults to file size.</dd>
+
+  <dt>status</dt>
+    <dd>
+      Status code to be send. Useful when sending a static file as an error page.
+
+      If supported by the Rack handler, other means than streaming from the Ruby
+      process will be used. If you use this helper method, Sinatra will automatically
+      handle range requests.
+    </dd>
+</dl>
+
 
 ## リクエストオブジェクトへのアクセス
 
@@ -1265,6 +1645,109 @@ post "/api" do
 end
 ```
 
+### Attachments
+
+You can use the `attachment` helper to tell the browser the response should be
+stored on disk rather than displayed in the browser:
+
+``` ruby
+get '/' do
+  attachment
+  "store it!"
+end
+```
+
+You can also pass it a file name:
+
+``` ruby
+get '/' do
+  attachment "info.txt"
+  "store it!"
+end
+```
+
+### Dealing with Date and Time
+
+Sinatra offers a `time_for` helper method that generates a Time object
+from the given value. It is also able to convert `DateTime`, `Date` and
+similar classes:
+
+``` ruby
+get '/' do
+  pass if Time.now > time_for('Dec 23, 2012')
+  "still time"
+end
+```
+
+This method is used internally by `expires`, `last_modified` and akin. You can
+therefore easily extend the behavior of those methods by overriding `time_for`
+in your application:
+
+``` ruby
+helpers do
+  def time_for(value)
+    case value
+    when :yesterday then Time.now - 24*60*60
+    when :tomorrow  then Time.now + 24*60*60
+    else super
+    end
+  end
+end
+
+get '/' do
+  last_modified :yesterday
+  expires :tomorrow
+  "hello"
+end
+```
+
+### Looking Up Template Files
+
+The `find_template` helper is used to find template files for rendering:
+
+``` ruby
+find_template settings.views, 'foo', Tilt[:haml] do |file|
+  puts "could be #{file}"
+end
+```
+
+This is not really useful. But it is useful that you can actually override this
+method to hook in your own lookup mechanism. For instance, if you want to be
+able to use more than one view directory:
+
+``` ruby
+set :views, ['views', 'templates']
+
+helpers do
+  def find_template(views, name, engine, &block)
+    Array(views).each { |v| super(v, name, engine, &block) }
+  end
+end
+```
+
+Another example would be using different directories for different engines:
+
+``` ruby
+set :views, :sass => 'views/sass', :haml => 'templates', :default => 'views'
+
+helpers do
+  def find_template(views, name, engine, &block)
+    _, folder = views.detect { |k,v| engine == Tilt[k] }
+    folder ||= views[:default]
+    super(folder, name, engine, &block)
+  end
+end
+```
+
+You can also easily wrap this up in an extension and share with others!
+
+Note that `find_template` does not check if the file really exists but
+rather calls the given block for all possible paths. This is not a performance
+issue, since `render` will use `break` as soon as a file is found. Also,
+template locations (and content) will be cached if you are not running in
+development mode. You should keep that in mind if you write a really crazy
+method.
+
 ## 設定
 
 どの環境でも起動時に１回だけ実行されます。
@@ -1288,6 +1771,238 @@ end
 ``` ruby
 configure :production, :test do
   ...
+end
+```
+
+### Configuring attack protection
+
+Sinatra is using
+[Rack::Protection](https://github.com/rkh/rack-protection#readme) to defend
+your application against common, opportunistic attacks. You can easily disable
+this behavior (which will open up your application to tons of common
+vulnerabilities):
+
+``` ruby
+disable :protection
+```
+
+To skip a single defense layer, set `protection` to an options hash:
+
+``` ruby
+set :protection, :except => :path_traversal
+```
+You can also hand in an array in order to disable a list of protections:
+
+``` ruby
+set :protection, :except => [:path_traversal, :session_hijacking]
+```
+
+By default, Sinatra will only set up session based protection if `:sessions`
+has been enabled. Sometimes you want to set up sessions on your own, though. In
+that case you can get it to set up session based protections by passing the
+`:session` option:
+
+``` ruby
+use Rack::Session::Pool
+set :protection, :session => true
+```
+
+### Available Settings
+
+<dl>
+  <dt>absolute_redirects</dt>
+  <dd>
+    If disabled, Sinatra will allow relative redirects, however, Sinatra will no
+    longer conform with RFC 2616 (HTTP 1.1), which only allows absolute redirects.
+  </dd>
+  <dd>
+    Enable if your app is running behind a reverse proxy that has not been set up
+    properly. Note that the <tt>url</tt> helper will still produce absolute URLs, unless you
+    pass in <tt>false</tt> as the second parameter.
+  </dd>
+  <dd>Disabled by default.</dd>
+
+  <dt>add_charsets</dt>
+  <dd>
+    Mime types the <tt>content_type</tt> helper will automatically add the charset info to.
+    You should add to it rather than overriding this option:
+    <tt>settings.add_charsets << "application/foobar"</tt>
+  </dd>
+
+  <dt>app_file</dt>
+  <dd>
+    Path to the main application file, used to detect project root, views and public
+    folder and inline templates.
+  </dd>
+
+  <dt>bind</dt>
+  <dd>IP address to bind to (default: <tt>0.0.0.0</tt> <em>or</em> <tt>localhost</tt> if your `environment` is set to development.). Only used for built-in server.</dd>
+
+  <dt>default_encoding</dt>
+  <dd>Encoding to assume if unknown (defaults to <tt>"utf-8"</tt>).</dd>
+
+  <dt>dump_errors</dt>
+  <dd>Display errors in the log.</dd>
+
+  <dt>environment</dt>
+  <dd>
+    Current environment. Defaults to <tt>ENV['RACK_ENV']</tt>, or <tt>"development"</tt> if
+    not available.
+  </dd>
+
+  <dt>logging</dt>
+  <dd>Use the logger.</dd>
+
+  <dt>lock</dt>
+  <dd>
+    Places a lock around every request, only running processing on request
+    per Ruby process concurrently.
+  </dd>
+  <dd>Enabled if your app is not thread-safe. Disabled per default.</dd>
+
+  <dt>method_override</dt>
+  <dd>
+    Use <tt>_method</tt> magic to allow put/delete forms in browsers that
+    don't support it.
+  </dd>
+
+  <dt>port</dt>
+  <dd>Port to listen on. Only used for built-in server.</dd>
+
+  <dt>prefixed_redirects</dt>
+  <dd>
+    Whether or not to insert <tt>request.script_name</tt> into redirects if no
+    absolute path is given. That way <tt>redirect '/foo'</tt> would behave like
+    <tt>redirect to('/foo')</tt>. Disabled per default.
+  </dd>
+
+  <dt>protection</dt>
+  <dd>Whether or not to enable web attack protections. See protection section above.</dd>
+
+  <dt>public_dir</dt>
+  <dd>Alias for <tt>public_folder</tt>. See below.</dd>
+
+  <dt>public_folder</dt>
+  <dd>
+    Path to the folder public files are served from. Only used if static
+    file serving is enabled (see <tt>static</tt> setting below). Inferred from
+    <tt>app_file</tt> setting if not set.
+  </dd>
+
+  <dt>reload_templates</dt>
+  <dd>
+    Whether or not to reload templates between requests. Enabled in development mode.
+  </dd>
+
+  <dt>root</dt>
+  <dd>
+    Path to project root folder. Inferred from <tt>app_file</tt> setting if not set.
+  </dd>
+
+  <dt>raise_errors</dt>
+  <dd>
+    Raise exceptions (will stop application). Enabled by default when
+    <tt>environment</tt> is set to <tt>"test"</tt>, disabled otherwise.
+  </dd>
+
+  <dt>run</dt>
+  <dd>
+    If enabled, Sinatra will handle starting the web server. Do not
+    enable if using rackup or other means.
+  </dd>
+
+  <dt>running</dt>
+  <dd>Is the built-in server running now? Do not change this setting!</dd>
+
+  <dt>server</dt>
+  <dd>
+    Server or list of servers to use for built-in server. Order indicates
+    priority, default depends on Ruby implementation.
+  </dd>
+
+  <dt>sessions</dt>
+  <dd>
+    Enable cookie-based sessions support using <tt>Rack::Session::Cookie</tt>.
+    See 'Using Sessions' section for more information.
+  </dd>
+
+  <dt>show_exceptions</dt>
+  <dd>
+    Show a stack trace in the browser when an exception
+    happens. Enabled by default when <tt>environment</tt>
+    is set to <tt>"development"</tt>, disabled otherwise.
+  </dd>
+  <dd>
+    Can also be set to <tt>:after_handler</tt> to trigger
+    app-specified error handling before showing a stack
+    trace in the browser.
+  </dd>
+
+  <dt>static</dt>
+  <dd>Whether Sinatra should handle serving static files.</dd>
+  <dd>Disable when using a server able to do this on its own.</dd>
+  <dd>Disabling will boost performance.</dd>
+  <dd>
+    Enabled per default in classic style, disabled for
+    modular apps.
+  </dd>
+
+  <dt>static_cache_control</dt>
+  <dd>
+    When Sinatra is serving static files, set this to add
+    <tt>Cache-Control</tt> headers to the responses. Uses the
+    <tt>cache_control</tt> helper. Disabled by default.
+  </dd>
+  <dd>
+    Use an explicit array when setting multiple values:
+    <tt>set :static_cache_control, [:public, :max_age => 300]</tt>
+  </dd>
+
+  <dt>threaded</dt>
+  <dd>
+    If set to <tt>true</tt>, will tell Thin to use <tt>EventMachine.defer</tt>
+    for processing the request.
+  </dd>
+
+  <dt>views</dt>
+  <dd>
+    Path to the views folder. Inferred from <tt>app_file</tt> setting if
+    not set.
+  </dd>
+
+  <dt>x_cascade</dt>
+  <dd>
+    Whether or not to set the X-Cascade header if no route matches.
+    Defaults to <tt>true</tt>.
+  </dd>
+</dl>
+
+## Environments
+
+There are three predefined `environments`: `"development"`,
+`"production"` and `"test"`. Environments can be set
+through the `RACK_ENV` environment variable. The default value is
+`"development"`. In the `"development"` environment all templates are reloaded between
+requests, and special `not_found` and `error` handlers
+display stack traces in your browser.
+In the `"production"` and `"test"` environments, templates are cached by default.
+
+To run different environments, set the `RACK_ENV` environment variable:
+
+``` shell
+RACK_ENV=production ruby my_app.rb
+```
+
+You can use predefined methods: `development?`, `test?` and `production?` to
+check the current environment setting:
+
+``` ruby
+get '/' do
+  if settings.development?
+    "development!"
+  else
+    "not development!"
+  end
 end
 ```
 
@@ -1364,20 +2079,6 @@ end
 開発環境として実行している場合、Sinatraは特別な`not_found`と`error`ハンドラーを
 インストールしています。
 
-## MIMEタイプ
-
-`send_file`か静的ファイルを使う時、Sinatraが理解でいないMIMEタイプがある場合があります。
-その時は `mime_type` を使ってファイル拡張子毎に登録して下さい。
-
-``` ruby
-mime_type :foo, 'text/foo'
-```
-
-これはcontent\_typeヘルパーで利用することができます:
-
-``` ruby
-content_type :foo
-```
 
 ## Rackミドルウェア
 
@@ -1508,6 +2209,133 @@ mixin](http://github.com/sinatra/sinatra/blob/master/lib/sinatra/base.rb#L1064)
 [included into the main
 namespace](http://github.com/sinatra/sinatra/blob/master/lib/sinatra/main.rb#L25).
 
+### Modular vs. Classic Style
+
+Contrary to common belief, there is nothing wrong with the classic style. If it
+suits your application, you do not have to switch to a modular application.
+
+The main disadvantage of using the classic style rather than the modular style is that
+you will only have one Sinatra application per Ruby process. If you plan to use
+more than one, switch to the modular style. There is no reason you cannot mix
+the modular and the classic styles.
+
+If switching from one style to the other, you should be aware of slightly
+different default settings:
+
+<table>
+  <tr>
+    <th>Setting</th>
+    <th>Classic</th>
+    <th>Modular</th>
+  </tr>
+
+  <tr>
+    <td>app_file</td>
+    <td>file loading sinatra</td>
+    <td>file subclassing Sinatra::Base</td>
+  </tr>
+
+  <tr>
+    <td>run</td>
+    <td>$0 == app_file</td>
+    <td>false</td>
+  </tr>
+
+  <tr>
+    <td>logging</td>
+    <td>true</td>
+    <td>false</td>
+  </tr>
+
+  <tr>
+    <td>method_override</td>
+    <td>true</td>
+    <td>false</td>
+  </tr>
+
+  <tr>
+    <td>inline_templates</td>
+    <td>true</td>
+    <td>false</td>
+  </tr>
+
+  <tr>
+    <td>static</td>
+    <td>true</td>
+    <td>false</td>
+  </tr>
+</table>
+
+### Serving a Modular Application
+
+There are two common options for starting a modular app, actively starting with
+`run!`:
+
+``` ruby
+# my_app.rb
+require 'sinatra/base'
+
+class MyApp < Sinatra::Base
+  # ... app code here ...
+
+  # start the server if ruby file executed directly
+  run! if app_file == $0
+end
+```
+
+Start with:
+
+``` shell
+ruby my_app.rb
+```
+
+Or with a `config.ru` file, which allows using any Rack handler:
+
+``` ruby
+# config.ru (run with rackup)
+require './my_app'
+run MyApp
+```
+
+Run:
+
+``` shell
+rackup -p 4567
+```
+
+### Using a Classic Style Application with a config.ru
+
+Write your app file:
+
+``` ruby
+# app.rb
+require 'sinatra'
+
+get '/' do
+  'Hello world!'
+end
+```
+
+And a corresponding `config.ru`:
+
+``` ruby
+require './app'
+run Sinatra::Application
+```
+
+### When to use a config.ru?
+
+A `config.ru` file is recommended if:
+
+* You want to deploy with a different Rack handler (Passenger, Unicorn,
+  Heroku, ...).
+* You want to use more than one subclass of `Sinatra::Base`.
+* You want to use Sinatra only for middleware, and not as an endpoint.
+
+**There is no need to switch to a `config.ru` simply because you
+switched to the modular style, and you don't have to use the modular style for running
+with a `config.ru`.**
+
 ### Sinatraをミドルウェアとして利用する
 
 Sinatraは他のRackミドルウェアを利用することができるだけでなく、
@@ -1544,6 +2372,52 @@ class MyApp < Sinatra::Base
 
   get('/') { "Hello #{session['user_name']}." }
 end
+```
+
+### Dynamic Application Creation
+
+Sometimes you want to create new applications at runtime without having to
+assign them to a constant. You can do this with `Sinatra.new`:
+
+``` ruby
+require 'sinatra/base'
+my_app = Sinatra.new { get('/') { "hi" } }
+my_app.run!
+```
+
+It takes the application to inherit from as an optional argument:
+
+```ruby
+# config.ru (run with rackup)
+require 'sinatra/base'
+
+controller = Sinatra.new do
+  enable :logging
+  helpers MyHelpers
+end
+
+map('/a') do
+  run Sinatra.new(controller) { get('/') { 'a' } }
+end
+
+map('/b') do
+  run Sinatra.new(controller) { get('/') { 'b' } }
+end
+```
+
+This is especially useful for testing Sinatra extensions or using Sinatra in
+your own library.
+
+This also makes using Sinatra as middleware extremely easy:
+
+``` ruby
+require 'sinatra/base'
+
+use Sinatra do
+  get('/') { ... }
+end
+
+run RailsProject::Application
 ```
 
 ## スコープとバインディング
@@ -1657,6 +2531,76 @@ ruby myapp.rb [-h] [-x] [-e ENVIRONMENT] [-p PORT] [-o HOST] [-s HANDLER]
     -s # rackserver/handlerを指定 (デフォルトはthin)
     -x # mutex lockを付ける (デフォルトはoff)
 
+## Requirement
+
+The following Ruby versions are officially supported:
+<dl>
+  <dt>Ruby 1.8.7</dt>
+  <dd>
+    1.8.7 is fully supported, however, if nothing is keeping you from it, we
+    recommend upgrading or switching to JRuby or Rubinius. Support for 1.8.7
+    will not be dropped before Sinatra 2.0. Ruby 1.8.6 is no longer supported.
+  </dd>
+
+  <dt>Ruby 1.9.2</dt>
+  <dd>
+    1.9.2 is fully supported. Do not use 1.9.2p0, as it is known to cause
+    segmentation faults when running Sinatra. Official support will continue
+    at least until the release of Sinatra 1.5.
+  </dd>
+
+  <dt>Ruby 1.9.3</dt>
+  <dd>
+    1.9.3 is fully supported and recommended. Please note that switching to 1.9.3
+    from an earlier version will invalidate all sessions. 1.9.3 will be supported
+    until the release of Sinatra 2.0.
+  </dd>
+
+  <dt>Ruby 2.0.0</dt>
+  <dd>
+    2.0.0 is fully supported and recommended. There are currently no plans to drop
+    official support for it.
+  </dd>
+
+  <dt>Rubinius</dt>
+  <dd>
+    Rubinius is officially supported (Rubinius >= 2.x). It is recommended to
+    <tt>gem install puma</tt>.
+  </dd>
+
+  <dt>JRuby</dt>
+  <dd>
+    The latest stable release of JRuby is officially supported. It is not
+    recommended to use C extensions with JRuby. It is recommended to
+    <tt>gem install trinidad</tt>.
+  </dd>
+</dl>
+
+We also keep an eye on upcoming Ruby versions.
+
+The following Ruby implementations are not officially supported but still are
+known to run Sinatra:
+
+* Older versions of JRuby and Rubinius
+* Ruby Enterprise Edition
+* MacRuby, Maglev, IronRuby
+* Ruby 1.9.0 and 1.9.1 (but we do recommend against using those)
+
+Not being officially supported means if things only break there and not on a
+supported platform, we assume it's not our issue but theirs.
+
+We also run our CI against ruby-head (the upcoming 2.1.0), but we can't
+guarantee anything, since it is constantly moving. Expect 2.1.0 to be fully
+supported.
+
+Sinatra should work on any operating system supported by the chosen Ruby
+implementation.
+
+If you run MacRuby, you should `gem install control_tower`.
+
+Sinatra currently doesn't run on Cardinal, SmallRuby, BlueRuby or any
+Ruby version prior to 1.8.7.
+
 ## 最新開発版について
 
 Sinatraの開発版を使いたい場合は、ローカルに開発版を落として、
@@ -1686,6 +2630,78 @@ Sinatraのソースを更新する方法:
 cd myproject/sinatra
 git pull
 ```
+
+### With Bundler
+
+If you want to run your application with the latest Sinatra, using
+[Bundler](http://gembundler.com/) is the recommended way.
+
+First, install bundler, if you haven't:
+
+``` shell
+gem install bundler
+```
+
+Then, in your project directory, create a `Gemfile`:
+
+```ruby
+source 'https://rubygems.org'
+gem 'sinatra', :github => "sinatra/sinatra"
+
+# other dependencies
+gem 'haml'                    # for instance, if you use haml
+gem 'activerecord', '~> 3.0'  # maybe you also need ActiveRecord 3.x
+```
+
+Note that you will have to list all your application's dependencies in the `Gemfile`.
+Sinatra's direct dependencies (Rack and Tilt) will, however, be automatically
+fetched and added by Bundler.
+
+Now you can run your app like this:
+
+``` shell
+bundle exec ruby myapp.rb
+```
+
+### Roll Your Own
+
+Create a local clone and run your app with the `sinatra/lib` directory
+on the `$LOAD_PATH`:
+
+``` shell
+cd myapp
+git clone git://github.com/sinatra/sinatra.git
+ruby -I sinatra/lib myapp.rb
+```
+
+To update the Sinatra sources in the future:
+
+``` shell
+cd myapp/sinatra
+git pull
+```
+
+### Install Globally
+
+You can build the gem on your own:
+
+``` shell
+git clone git://github.com/sinatra/sinatra.git
+cd sinatra
+rake sinatra.gemspec
+rake install
+```
+
+If you install gems as root, the last step should be:
+
+``` shell
+sudo rake install
+```
+
+## Versioning
+
+Sinatra follows [Semantic Versioning](http://semver.org/), both SemVer and
+SemVerTag.
 
 ## その他
 

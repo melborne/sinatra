@@ -30,6 +30,91 @@ ruby myapp.rb
 
 ThinがあればSinatraはこれを利用するので、`gem install thin`することをお薦めします。
 
+## 目次
+
+* [Sinatra](#sinatra)
+    * [目次](#目次)
+    * [ルーティング(Routes)](#ルーティングroutes)
+    * [条件(Conditions)](#条件conditions)
+    * [戻り値(Return Values)](#戻り値return-values)
+    * [カスタムルーティングマッチャー(Custom Route Matchers)](#カスタムルーティングマッチャーcustom-route-matchers)
+    * [静的ファイル(Static Files)](#静的ファイルstatic-files)
+    * [ビュー / テンプレート(Views / Templates)](#ビュー--テンプレートviews--templates)
+        * [リテラルテンプレート(Literal Templates)](#リテラルテンプレートliteral-templates)
+        * [利用可能なテンプレート言語](#利用可能なテンプレート言語)
+            * [Haml テンプレート](#haml-テンプレート)
+            * [Erb テンプレート](#erb-テンプレート)
+            * [Builder テンプレート](#builder-テンプレート)
+            * [Nokogiri テンプレート](#nokogiri-テンプレート)
+            * [Sass テンプレート](#sass-テンプレート)
+            * [SCSS テンプレート](#scss-テンプレート)
+            * [Less テンプレート](#less-テンプレート)
+            * [Liquid テンプレート](#liquid-テンプレート)
+            * [Markdown テンプレート](#markdown-テンプレート)
+            * [Textile テンプレート](#textile-テンプレート)
+            * [RDoc テンプレート](#rdoc-テンプレート)
+            * [Radius テンプレート](#radius-テンプレート)
+            * [Markaby テンプレート](#markaby-テンプレート)
+            * [RABL テンプレート](#rabl-テンプレート)
+            * [Slim テンプレート](#slim-テンプレート)
+            * [Creole テンプレート](#creole-テンプレート)
+            * [CoffeeScript テンプレート](#coffeescript-テンプレート)
+            * [Stylus テンプレート](#stylus-テンプレート)
+            * [Yajl テンプレート](#yajl-テンプレート)
+            * [WLang テンプレート](#wlang-テンプレート)
+        * [テンプレート内での変数へのアクセス](#テンプレート内での変数へのアクセス)
+        * [`yield`を伴うテンプレートとネストしたレイアウト](#yieldを伴うテンプレートとネストしたレイアウト)
+        * [インラインテンプレート(Inline Templates)](#インラインテンプレートinline-templates)
+        * [名前付きテンプレート(Named Templates)](#名前付きテンプレートnamed-templates)
+        * [ファイル拡張子の関連付け](#ファイル拡張子の関連付け)
+        * [オリジナルテンプレートエンジンの追加](#オリジナルテンプレートエンジンの追加)
+    * [フィルタ(Filters)](#フィルタfilters)
+    * [ヘルパー(Helpers)](#ヘルパーhelpers)
+        * [セッションの使用](#セッションの使用)
+        * [停止(Halting)](#停止halting)
+        * [パッシング(Passing)](#パッシングpassing)
+        * [別ルーティングの誘発](#別ルーティングの誘発)
+        * [ボディ、ステータスコードおよびヘッダの設定](#ボディステータスコードおよびヘッダの設定)
+        * [ストリーミングレスポンス(Streaming Responses)](#ストリーミングレスポンスstreaming-responses)
+        * [ロギング(Logging)](#ロギングlogging)
+        * [MIMEタイプ(Mime Types)](#MIMEタイプmime-types)
+        * [URLの生成](#URLの生成)
+        * [ブラウザリダイレクト(Browser Redirect)](#ブラウザリダイレクトbrowser-redirect)
+        * [キャッシュ制御(Cache Control)](#キャッシュ制御cache-control)
+        * [ファイルの送信(Sending Files)](#ファイルの送信sending-files)
+        * [リクエストオブジェクトへのアクセス(Accessing the Request Object)](#リクエストオブジェクトへのアクセスaccessing-the-request-object)
+        * [アタッチメント(Attachments)](#アタッチメントattachments)
+        * [日付と時刻の取り扱い(Dealing with Date and Time)](#日付と時刻の取り扱いdealing-with-date-and-time)
+        * [テンプレートファイルの探索(Looking Up Template Files)](#テンプレートファイルの探索looking-up-template-files)
+    * [コンフィギュレーション(Configuration)](#コンフィギュレーションconfiguration)
+        * [攻撃防御に対する設定(Configuring attack protection)](#攻撃防御に対する設定configuring-attack-protection)
+        * [利用可能な設定(Available Settings)](#利用可能な設定available-settings)
+    * [環境設定(Environments)](#環境設定environments)
+    * [エラーハンドリング(Error Handling)](#エラーハンドリングerror-handling)
+        * [Not Found](#not-found)
+        * [エラー(Error)](#エラーerror)
+    * [Rackミドルウェア(Rack Middleware)](#Rackミドルウェアrack-middleware)
+    * [テスト(Testing)](#テストtesting)
+    * [Sinatra::Base - ミドルウェア、ライブラリおよびモジュラーアプリ](#Sinatra::Base---ミドルウェアライブラリおよびモジュラーアプリ)
+        * [モジュラースタイル vs クラッシックスタイル(Modular vs. Classic Style)](#モジュラースタイル-vs-クラッシックスタイルmodular-vs-classic-style)
+        * [モジュラーアプリケーションの提供(Serving a Modular Application)](#モジュラーアプリケーションの提供serving-a-modular-application)
+        * [config.ruを用いたクラッシックスタイルアプリケーションの使用](#configruを用いたクラッシックスタイルアプリケーションの使用)
+        * [config.ruはいつ使うのか？](#configruはいつ使うのか)
+        * [Sinatraのミドルウェアとしての利用(Using Sinatra as Middleware)](#Sinatraのミドルウェアとしての利用using-sinatra-as-middleware)
+        * [動的なアプリケーションの生成(Dynamic Application Creation)](#動的なアプリケーションの生成dynamic-application-creation)
+    * [スコープとバインディング(Scopes and Binding)](#スコープとバインディングscopes-and-binding)
+        * [アプリケーション/クラスのスコープ(Application/Class Scope)](#アプリケーションクラスのスコープapplicationclass-scope)
+        * [リクエスト/インスタンスのスコープ(Request/Instance Scope)](#リクエストインスタンスのスコープrequestinstance-scope)
+        * [デリゲートスコープ(Delegation Scope)](#デリゲートスコープdelegation-scope)
+    * [コマンドライン(Command Line)](#コマンドラインcommand-line)
+    * [必要環境(Requirement)](#必要環境requirement)
+    * [最新開発版(The Bleeding Edge)](#最新開発版the-bleeding-edge)
+        * [Bundlerを使う場合](#Bundlerを使う場合)
+        * [直接組み込む場合(Roll Your Own)](#直接組み込む場合roll-your-own)
+        * [グローバル環境にインストールする場合(Install Globally)](#グローバル環境にインストールする場合install-globally)
+    * [バージョニング(Versioning)](#バージョニングversioning)
+    * [参考文献(Further Reading)](#参考文献further-reading)
+
 ## ルーティング(Routes)
 
 Sinatraでは、ルーティングはHTTPメソッドとURLマッチングパターンがペアになっています。
@@ -278,7 +363,7 @@ set :public_folder, File.dirname(__FILE__) + '/static'
 ノート: この静的ファイル用のディレクトリ名はURL中に含まれません。
 例えば、`./public/css/style.css`は`http://example.com/css/style.css`でアクセスできます。
 
-## ビュー / テンプレート(Views /Templates)
+## ビュー / テンプレート(Views / Templates)
 
 各テンプレート言語はそれ自身のレンダリングメソッドを通して展開されます。それらのメソッドは単に文字列を返します。
 
@@ -892,7 +977,7 @@ var resource = {"foo":"bar","baz":"qux"}; present(resource);
 
 WLang内でのRubyメソッドの呼び出しは一般的ではないので、ほとんどの場合にlocalsを指定する必要があるでしょう。しかしながら、WLangで書かれたレイアウトは`yield`をサポートしています。
 
-### テンプレート内で変数にアクセスする
+### テンプレート内での変数へのアクセス
 
 テンプレートはルーティングハンドラと同じコンテキストの中で評価されます。ルーティングハンドラでセットされたインスタンス変数はテンプレート内で直接使うことができます。
 
@@ -1212,7 +1297,7 @@ end
 
 ルーティングブロックからすぐに抜け出し、次にマッチするルーティングを実行します。マッチするルーティングが見当たらない場合は404が返されます。
 
-### Triggering Another Route
+### 別ルーティングの誘発
 
 Sometimes `pass` is not what you want, instead you would like to get the result
 of calling another route. Simply use `call` to achieve this:
@@ -1237,7 +1322,7 @@ a duplicate, use `call!` instead of `call`.
 
 Check out the Rack specification if you want to learn more about `call`.
 
-### Setting Body, Status Code and Headers
+### ボディ、ステータスコードおよびヘッダの設定
 
 It is possible and recommended to set the status code and response body with the
 return value of the route block. However, in some scenarios you might want to
@@ -1273,7 +1358,7 @@ end
 Like `body`, `headers` and `status` with no arguments can be used to access
 their current values.
 
-### Streaming Responses
+### ストリーミングレスポンス(Streaming Responses)
 
 Sometimes you want to start sending out data while still generating parts of
 the response body. In extreme examples, you want to keep sending data until
@@ -1340,7 +1425,7 @@ post '/message' do
 end
 ```
 
-### Logging
+### ロギング(Logging)
 
 In the request scope, the `logger` helper exposes a `Logger` instance:
 
@@ -1373,7 +1458,7 @@ common use case is when you want to set your own logger. Sinatra will use
 whatever it will find in `env['rack.logger']`.
 
 
-### MIMEタイプ
+### MIMEタイプ(Mime Types)
 
 `send_file`か静的ファイルを使う時、Sinatraが理解でいないMIMEタイプがある場合があります。
 その時は `mime_type` を使ってファイル拡張子毎に登録して下さい。
@@ -1388,7 +1473,7 @@ mime_type :foo, 'text/foo'
 content_type :foo
 ```
 
-### Generating URLs
+### URLの生成
 
 For generating URLs you should use the `url` helper method, for instance, in
 Haml:
@@ -1401,7 +1486,7 @@ It takes reverse proxies and Rack routers into account, if present.
 
 This method is also aliased to `to` (see below for an example).
 
-### Browser Redirect
+### ブラウザリダイレクト(Browser Redirect)
 
 You can trigger a browser redirect with the `redirect` helper method:
 
@@ -1453,7 +1538,7 @@ get '/bar' do
 end
 ```
 
-### Cache Control
+### キャッシュ制御(Cache Control)
 
 Setting your headers correctly is the foundation for proper HTTP caching.
 
@@ -1545,7 +1630,7 @@ If you still want to use a weak ETag, pass in a `:kind` option:
 etag '', :new_resource => true, :kind => :weak
 ```
 
-### Sending Files
+### ファイルの送信(Sending Files)
 
 For sending files, you can use the `send_file` helper method:
 
@@ -1593,7 +1678,7 @@ The options are:
 </dl>
 
 
-## リクエストオブジェクトへのアクセス
+## リクエストオブジェクトへのアクセス(Accessing the Request Object)
 
 受信するリクエストオブジェクトは、\`request\`メソッドを通じてリクエストレベル(フィルタ、ルーティング、エラーハンドラ)からアクセスすることができます:
 
@@ -1645,7 +1730,7 @@ post "/api" do
 end
 ```
 
-### Attachments
+### アタッチメント(Attachments)
 
 You can use the `attachment` helper to tell the browser the response should be
 stored on disk rather than displayed in the browser:
@@ -1666,7 +1751,7 @@ get '/' do
 end
 ```
 
-### Dealing with Date and Time
+### 日付と時刻の取り扱い(Dealing with Date and Time)
 
 Sinatra offers a `time_for` helper method that generates a Time object
 from the given value. It is also able to convert `DateTime`, `Date` and
@@ -1701,7 +1786,7 @@ get '/' do
 end
 ```
 
-### Looking Up Template Files
+### テンプレートファイルの探索(Looking Up Template Files)
 
 The `find_template` helper is used to find template files for rendering:
 
@@ -1748,7 +1833,7 @@ template locations (and content) will be cached if you are not running in
 development mode. You should keep that in mind if you write a really crazy
 method.
 
-## 設定
+## コンフィギュレーション(Configuration)
 
 どの環境でも起動時に１回だけ実行されます。
 
@@ -1774,7 +1859,7 @@ configure :production, :test do
 end
 ```
 
-### Configuring attack protection
+### 攻撃防御に対する設定(Configuring attack protection)
 
 Sinatra is using
 [Rack::Protection](https://github.com/rkh/rack-protection#readme) to defend
@@ -1807,7 +1892,7 @@ use Rack::Session::Pool
 set :protection, :session => true
 ```
 
-### Available Settings
+### 利用可能な設定(Available Settings)
 
 <dl>
   <dt>absolute_redirects</dt>
@@ -1977,7 +2062,7 @@ set :protection, :session => true
   </dd>
 </dl>
 
-## Environments
+## 環境設定(Environments)
 
 There are three predefined `environments`: `"development"`,
 `"production"` and `"test"`. Environments can be set
@@ -2006,7 +2091,7 @@ get '/' do
 end
 ```
 
-## エラーハンドリング
+## エラーハンドリング(Error Handling)
 
 エラーハンドラーはルーティングコンテキストとbeforeフィルタ内で実行します。
 `haml`、`erb`、`halt`などを使うこともできます。
@@ -2022,7 +2107,7 @@ not_found do
 end
 ```
 
-### エラー
+### エラー(Error)
 
 `error`
 ハンドラーはルーティングブロックかbeforeフィルタ内で例外が発生した時はいつでも発動します。
@@ -2080,7 +2165,7 @@ end
 インストールしています。
 
 
-## Rackミドルウェア
+## Rackミドルウェア(Rack Middleware)
 
 [SinatraはRack](http://rack.rubyforge.org/)フレームワーク用の
 最小限の標準インターフェース
@@ -2117,7 +2202,7 @@ end
 Rackはログ、デバッギング、URLルーティング、認証、セッションなどいろいろな機能を備えた標準的ミドルウェアです。
 Sinatraはその多くのコンポーネントを自動で使うよう基本設定されているため、`use`で明示的に指定する必要はありません。
 
-## テスト
+## テスト(Testing)
 
 SinatraでのテストはRack-basedのテストライブラリかフレームワークを使って書くことができます。
 [Rack::Test](http://gitrdoc.com/brynary/rack-test)
@@ -2154,7 +2239,7 @@ end
 注意: ビルトインのSinatra::TestモジュールとSinatra::TestHarnessクラスは
 0.9.2リリース以降、廃止予定になっています。
 
-## Sinatra::Base - ミドルウェア、ライブラリ、 モジュラーアプリ
+## Sinatra::Base - ミドルウェア、ライブラリおよびモジュラーアプリ
 
 トップレベル(グローバル領域)上でいろいろ定義していくのは軽量アプリならうまくいきますが、
 RackミドルウェアやRails metal、サーバのコンポーネントを含んだシンプルな
@@ -2209,7 +2294,7 @@ mixin](http://github.com/sinatra/sinatra/blob/master/lib/sinatra/base.rb#L1064)
 [included into the main
 namespace](http://github.com/sinatra/sinatra/blob/master/lib/sinatra/main.rb#L25).
 
-### Modular vs. Classic Style
+### モジュラースタイル vs クラッシックスタイル(Modular vs. Classic Style)
 
 Contrary to common belief, there is nothing wrong with the classic style. If it
 suits your application, you do not have to switch to a modular application.
@@ -2266,7 +2351,7 @@ different default settings:
   </tr>
 </table>
 
-### Serving a Modular Application
+### モジュラーアプリケーションの提供(Serving a Modular Application)
 
 There are two common options for starting a modular app, actively starting with
 `run!`:
@@ -2303,7 +2388,7 @@ Run:
 rackup -p 4567
 ```
 
-### Using a Classic Style Application with a config.ru
+### config.ruを用いたクラッシックスタイルアプリケーションの使用
 
 Write your app file:
 
@@ -2323,7 +2408,7 @@ require './app'
 run Sinatra::Application
 ```
 
-### When to use a config.ru?
+### config.ruはいつ使うのか？
 
 A `config.ru` file is recommended if:
 
@@ -2336,7 +2421,7 @@ A `config.ru` file is recommended if:
 switched to the modular style, and you don't have to use the modular style for running
 with a `config.ru`.**
 
-### Sinatraをミドルウェアとして利用する
+### Sinatraのミドルウェアとしての利用(Using Sinatra as Middleware)
 
 Sinatraは他のRackミドルウェアを利用することができるだけでなく、
 全てのSinatraアプリケーションは、それ自体ミドルウェアとして別のRackエンドポイントの前に追加することが可能です。
@@ -2374,7 +2459,7 @@ class MyApp < Sinatra::Base
 end
 ```
 
-### Dynamic Application Creation
+### 動的なアプリケーションの生成(Dynamic Application Creation)
 
 Sometimes you want to create new applications at runtime without having to
 assign them to a constant. You can do this with `Sinatra.new`:
@@ -2420,11 +2505,11 @@ end
 run RailsProject::Application
 ```
 
-## スコープとバインディング
+## スコープとバインディング(Scopes and Binding)
 
 現在のスコープはどのメソッドや変数が利用可能かを決定します。
 
-### アプリケーション/クラスのスコープ
+### アプリケーション/クラスのスコープ(Application/Class Scope)
 
 全てのSinatraアプリケーションはSinatra::Baseのサブクラスに相当します。
 もしトップレベルDSLを利用しているならば(`require 'sinatra'`)このクラスはSinatra::Applicationであり、
@@ -2462,7 +2547,7 @@ end
 
 -   リクエストスコープの中での\`settings\`
 
-### リクエスト/インスタンスのスコープ
+### リクエスト/インスタンスのスコープ(Request/Instance Scope)
 
 やってくるリクエストごとに、あなたのアプリケーションクラスの新しいインスタンスが作成され、全てのハンドラブロックがそのスコープで実行されます。
 このスコープの内側からは\`request\`や\`session\`オブジェクトにアクセスすることができ、\`erb\`や\`haml\`のような表示メソッドを呼び出すことができます。
@@ -2495,7 +2580,7 @@ end
 
 -   テンプレート/ビュー
 
-### デリゲートスコープ
+### デリゲートスコープ(Delegation Scope)
 
 デリゲートスコープは、単にクラススコープにメソッドを転送します。
 しかしながら、クラスのバインディングを持っていないため、クラススコープと全く同じふるまいをするわけではありません:
@@ -2514,7 +2599,7 @@ mixin](http://github.com/sinatra/sinatra/blob/ceac46f0bc129a6e994a06100aa854f606
 は[main
 名前空間にincludeされています](http://github.com/sinatra/sinatra/blob/ceac46f0bc129a6e994a06100aa854f606fe5992/lib/sinatra/main.rb#L28).
 
-## コマンドライン
+## コマンドライン(Command Line)
 
 Sinatraアプリケーションは直接実行できます。
 
@@ -2531,7 +2616,7 @@ ruby myapp.rb [-h] [-x] [-e ENVIRONMENT] [-p PORT] [-o HOST] [-s HANDLER]
     -s # rackserver/handlerを指定 (デフォルトはthin)
     -x # mutex lockを付ける (デフォルトはoff)
 
-## Requirement
+## 必要環境(Requirement)
 
 The following Ruby versions are officially supported:
 <dl>
@@ -2601,7 +2686,7 @@ If you run MacRuby, you should `gem install control_tower`.
 Sinatra currently doesn't run on Cardinal, SmallRuby, BlueRuby or any
 Ruby version prior to 1.8.7.
 
-## 最新開発版について
+## 最新開発版(The Bleeding Edge)
 
 Sinatraの開発版を使いたい場合は、ローカルに開発版を落として、
 `LOAD_PATH`の`sinatra/lib`ディレクトリを指定して実行して下さい。
@@ -2631,7 +2716,7 @@ cd myproject/sinatra
 git pull
 ```
 
-### With Bundler
+### Bundlerを使う場合
 
 If you want to run your application with the latest Sinatra, using
 [Bundler](http://gembundler.com/) is the recommended way.
@@ -2663,7 +2748,7 @@ Now you can run your app like this:
 bundle exec ruby myapp.rb
 ```
 
-### Roll Your Own
+### 直接組み込む場合(Roll Your Own)
 
 Create a local clone and run your app with the `sinatra/lib` directory
 on the `$LOAD_PATH`:
@@ -2681,7 +2766,7 @@ cd myapp/sinatra
 git pull
 ```
 
-### Install Globally
+### グローバル環境にインストールする場合(Install Globally)
 
 You can build the gem on your own:
 
@@ -2698,12 +2783,12 @@ If you install gems as root, the last step should be:
 sudo rake install
 ```
 
-## Versioning
+## バージョニング(Versioning)
 
 Sinatra follows [Semantic Versioning](http://semver.org/), both SemVer and
 SemVerTag.
 
-## その他
+## 参考文献(Further Reading)
 
 日本語サイト
 

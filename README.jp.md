@@ -82,13 +82,13 @@ ThinがあればSinatraはこれを利用するので、`gem install thin`する
         * [ブラウザリダイレクト(Browser Redirect)](#ブラウザリダイレクトbrowser-redirect)
         * [キャッシュ制御(Cache Control)](#キャッシュ制御cache-control)
         * [ファイルの送信(Sending Files)](#ファイルの送信sending-files)
-        * [リクエストオブジェクトへのアクセス(Accessing the Request Object)](#リクエストオブジェクトへのアクセスaccessing-the-request-object)
+        * [リクエストオブジェクトへのアクセス](#リクエストオブジェクトへのアクセス)
         * [アタッチメント(Attachments)](#アタッチメントattachments)
-        * [日付と時刻の取り扱い(Dealing with Date and Time)](#日付と時刻の取り扱いdealing-with-date-and-time)
-        * [テンプレートファイルの探索(Looking Up Template Files)](#テンプレートファイルの探索looking-up-template-files)
+        * [日付と時刻の取り扱い](#日付と時刻の取り扱い)
+        * [テンプレートファイルの探索](#テンプレートファイルの探索)
     * [コンフィギュレーション(Configuration)](#コンフィギュレーションconfiguration)
-        * [攻撃防御に対する設定(Configuring attack protection)](#攻撃防御に対する設定configuring-attack-protection)
-        * [利用可能な設定(Available Settings)](#利用可能な設定available-settings)
+        * [攻撃防御に対する設定](#攻撃防御に対する設定)
+        * [利用可能な設定](#利用可能な設定)
     * [環境設定(Environments)](#環境設定environments)
     * [エラーハンドリング(Error Handling)](#エラーハンドリングerror-handling)
         * [Not Found](#not-found)
@@ -96,24 +96,24 @@ ThinがあればSinatraはこれを利用するので、`gem install thin`する
     * [Rackミドルウェア(Rack Middleware)](#rackミドルウェアrack-middleware)
     * [テスト(Testing)](#テストtesting)
     * [Sinatra::Base - ミドルウェア、ライブラリおよびモジュラーアプリ](#sinatrabase---ミドルウェアライブラリおよびモジュラーアプリ)
-        * [モジュラースタイル vs クラッシックスタイル(Modular vs. Classic Style)](#モジュラースタイル-vs-クラッシックスタイルmodular-vs-classic-style)
-        * [モジュラーアプリケーションの提供(Serving a Modular Application)](#モジュラーアプリケーションの提供serving-a-modular-application)
+        * [モジュラースタイル vs クラッシックスタイル](#モジュラースタイル-vs-クラッシックスタイル)
+        * [モジュラーアプリケーションの提供](#モジュラーアプリケーションの提供)
         * [config.ruを用いたクラッシックスタイルアプリケーションの使用](#configruを用いたクラッシックスタイルアプリケーションの使用)
         * [config.ruはいつ使うのか？](#configruはいつ使うのか)
-        * [Sinatraのミドルウェアとしての利用(Using Sinatra as Middleware)](#sinatraのミドルウェアとしての利用using-sinatra-as-middleware)
-        * [動的なアプリケーションの生成(Dynamic Application Creation)](#動的なアプリケーションの生成dynamic-application-creation)
+        * [Sinatraのミドルウェアとしての利用](#sinatraのミドルウェアとしての利用)
+        * [動的なアプリケーションの生成](#動的なアプリケーションの生成)
     * [スコープとバインディング(Scopes and Binding)](#スコープとバインディングscopes-and-binding)
-        * [アプリケーション/クラスのスコープ(Application/Class Scope)](#アプリケーションクラスのスコープapplicationclass-scope)
-        * [リクエスト/インスタンスのスコープ(Request/Instance Scope)](#リクエストインスタンスのスコープrequestinstance-scope)
-        * [デリゲートスコープ(Delegation Scope)](#デリゲートスコープdelegation-scope)
-    * [コマンドライン(Command Line)](#コマンドラインcommand-line)
-    * [必要環境(Requirement)](#必要環境requirement)
-    * [最新開発版(The Bleeding Edge)](#最新開発版the-bleeding-edge)
+        * [アプリケーション/クラスのスコープ](#アプリケーションクラスのスコープ)
+        * [リクエスト/インスタンスのスコープ](#リクエストインスタンスのスコープ)
+        * [デリゲートスコープ](#デリゲートスコープ)
+    * [コマンドライン](#コマンドライン)
+    * [必要環境](#必要環境)
+    * [最新開発版](#最新開発版)
         * [Bundlerを使う場合](#bundlerを使う場合)
-        * [直接組み込む場合(Roll Your Own)](#直接組み込む場合roll-your-own)
-        * [グローバル環境にインストールする場合(Install Globally)](#グローバル環境にインストールする場合install-globally)
+        * [直接組み込む場合](#直接組み込む場合)
+        * [グローバル環境にインストールする場合](#グローバル環境にインストールする場合)
     * [バージョニング(Versioning)](#バージョニングversioning)
-    * [参考文献(Further Reading)](#参考文献further-reading)
+    * [参考文献](#参考文献)
 
 ## ルーティング(Routes)
 
@@ -1680,7 +1680,7 @@ The options are:
 </dl>
 
 
-## リクエストオブジェクトへのアクセス(Accessing the Request Object)
+## リクエストオブジェクトへのアクセス
 
 受信するリクエストオブジェクトは、`request`メソッドを通じてリクエストレベル(フィルタ、ルーティング、エラーハンドラ)からアクセスすることができます:
 
@@ -1758,7 +1758,7 @@ get '/' do
 end
 ```
 
-### 日付と時刻の取り扱い(Dealing with Date and Time)
+### 日付と時刻の取り扱い
 
 Sinatra offers a `time_for` helper method that generates a Time object
 from the given value. It is also able to convert `DateTime`, `Date` and
@@ -1793,7 +1793,7 @@ get '/' do
 end
 ```
 
-### テンプレートファイルの探索(Looking Up Template Files)
+### テンプレートファイルの探索
 
 The `find_template` helper is used to find template files for rendering:
 
@@ -1894,7 +1894,7 @@ get '/' do
 end
 ```
 
-### 攻撃防御に対する設定(Configuring attack protection)
+### 攻撃防御に対する設定
 
 Sinatra is using
 [Rack::Protection](https://github.com/rkh/rack-protection#readme) to defend
@@ -1927,7 +1927,7 @@ use Rack::Session::Pool
 set :protection, :session => true
 ```
 
-### 利用可能な設定(Available Settings)
+### 利用可能な設定
 
 <dl>
   <dt>absolute_redirects</dt>
@@ -2293,7 +2293,7 @@ end
 
 `Sinatra::Base`はまっさらです。ビルトインサーバを含む、ほとんどのオプションがデフォルトで無効になっています。利用可能なオプションとその挙動の詳細については[Configuring Settings](http://sinatra.github.com/configuration.html)(英語)をご覧下さい。
 
-### モジュラースタイル vs クラッシックスタイル(Modular vs. Classic Style)
+### モジュラースタイル vs クラッシックスタイル
 
 一般的認識と違って、クラッシックスタイルを使うことに問題はなにもありません。それがそのアプリケーションに合っているのであれば、モジュラーアプリケーションに移行する必要はありません。
 
@@ -2346,7 +2346,7 @@ end
 </table>
 
 
-### モジュラーアプリケーションの提供(Serving a Modular Application)
+### モジュラーアプリケーションの提供
 
 モジュラーアプリケーションを開始、つまり`run!`を使って開始させる二種類のやり方があります。
 
@@ -2413,7 +2413,7 @@ run Sinatra::Application
 
 **モジュラースタイルに移行したという理由だけで、`config.ru`に移行する必要はなく、`config.ru`で起動するためにモジュラースタイルを使う必要はありません。**
 
-### Sinatraのミドルウェアとしての利用(Using Sinatra as Middleware)
+### Sinatraのミドルウェアとしての利用
 
 Sinatraは他のRackミドルウェアを利用することができるだけでなく、
 全てのSinatraアプリケーションは、それ自体ミドルウェアとして別のRackエンドポイントの前に追加することが可能です。
@@ -2451,7 +2451,7 @@ class MyApp < Sinatra::Base
 end
 ```
 
-### 動的なアプリケーションの生成(Dynamic Application Creation)
+### 動的なアプリケーションの生成
 
 新しいアプリケーションを実行時に、定数に割り当てることなく生成したくなる場合があるでしょう。`Sinatra.new`を使えばそれができます。
 
@@ -2499,7 +2499,7 @@ run RailsProject::Application
 
 現在のスコープはどのメソッドや変数が利用可能かを決定します。
 
-### アプリケーション/クラスのスコープ(Application/Class Scope)
+### アプリケーション/クラスのスコープ
 
 全てのSinatraアプリケーションはSinatra::Baseのサブクラスに相当します。
 もしトップレベルDSLを利用しているならば(`require 'sinatra'`)このクラスはSinatra::Applicationであり、
@@ -2539,7 +2539,7 @@ end
 
 -   リクエストスコープの中での`settings`
 
-### リクエスト/インスタンスのスコープ(Request/Instance Scope)
+### リクエスト/インスタンスのスコープ
 
 やってくるリクエストごとに、あなたのアプリケーションクラスの新しいインスタンスが作成され、全てのハンドラブロックがそのスコープで実行されます。
 このスコープの内側からは`request`や`session`オブジェクトにアクセスすることができ、`erb`や`haml`のようなレンダリングメソッドを呼び出すことができます。
@@ -2572,7 +2572,7 @@ end
 
 -   テンプレート/ビュー
 
-### デリゲートスコープ(Delegation Scope)
+### デリゲートスコープ
 
 デリゲートスコープは、単にクラススコープにメソッドを転送します。
 しかしながら、クラスのバインディングを持っていないため、クラススコープと全く同じふるまいをするわけではありません。
@@ -2589,7 +2589,7 @@ end
 コードをご覧ください: ここでは [Sinatra::Delegator
 mixin](https://github.com/sinatra/sinatra/blob/ca06364/lib/sinatra/base.rb#L1609-1633)は[mainオブジェクトにextendされています](https://github.com/sinatra/sinatra/blob/ca06364/lib/sinatra/main.rb#L28-30)。
 
-## コマンドライン(Command Line)
+## コマンドライン
 
 Sinatraアプリケーションは直接実行できます。
 
@@ -2606,7 +2606,7 @@ ruby myapp.rb [-h] [-x] [-e ENVIRONMENT] [-p PORT] [-o HOST] [-s HANDLER]
     -s # rackserver/handlerを指定 (デフォルトはthin)
     -x # mutex lockを付ける (デフォルトはoff)
 
-## 必要環境(Requirement)
+## 必要環境
 
 次のRubyバージョンが公式にサポートされています。
 
@@ -2651,8 +2651,6 @@ ruby myapp.rb [-h] [-x] [-e ENVIRONMENT] [-p PORT] [-o HOST] [-s HANDLER]
 
 開発チームは常に最新となるRubyバージョンに注視しています。
 
-The following Ruby implementations are not officially supported but still are
-known to run Sinatra:
 次のRuby実装は公式にはサポートされていませんが、Sinatraが起動すると報告されています。
 
 * JRubyとRubiniusの古いバージョン
@@ -2672,7 +2670,7 @@ MacRubyを使う場合は、`gem install control_tower`してください。
 
 Sinatraは現在、Cardinal、SmallRuby、BlueRubyまたは1.8.7以前のバージョンのRuby上では動作しません。
 
-## 最新開発版(The Bleeding Edge)
+## 最新開発版
 
 Sinatraの最新開発版のコードを使いたい場合は、マスターブランチに対してアプリケーションを走らせて構いません。ある程度安定しています。また、適宜プレリリース版gemをpushしているので、
 
@@ -2713,7 +2711,7 @@ bundle exec ruby myapp.rb
 ```
 
 
-### 直接組み込む場合(Roll Your Own)
+### 直接組み込む場合
 
 ローカルにクローンを作って、`sinatra/lib`ディレクトリを`$LOAD_PATH`に追加してアプリケーションを起動します。
 
@@ -2731,7 +2729,7 @@ cd myapp/sinatra
 git pull
 ```
 
-### グローバル環境にインストールする場合(Install Globally)
+### グローバル環境にインストールする場合
 
 Sinatraのgemを自身でビルドすることもできます。
 
@@ -2752,7 +2750,7 @@ sudo rake install
 
 Sinatraは、[Semantic Versioning](http://semver.org/)におけるSemVerおよびSemVerTagの両方に準拠しています。
 
-## 参考文献(Further Reading)
+## 参考文献
 
 * [プロジェクトサイト](http://sinatra.github.com/) - ドキュメント、
     ニュース、他のリソースへのリンクがあります。
@@ -2777,5 +2775,4 @@ Sinatraは、[Semantic Versioning](http://semver.org/)におけるSemVerおよ�
 * [CIサーバ](http://travis-ci.org/sinatra/sinatra)
 
 * [Greenbear Laboratory Rack日本語マニュアル](http://route477.net/w/RackReferenceJa.html)
-  - Rackの日本語マニュアル
 

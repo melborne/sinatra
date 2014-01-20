@@ -2608,39 +2608,33 @@ ruby myapp.rb [-h] [-x] [-e ENVIRONMENT] [-p PORT] [-o HOST] [-s HANDLER]
 
 ## 必要環境(Requirement)
 
-The following Ruby versions are officially supported:
+次のRubyバージョンが公式にサポートされています。
+
 <dl>
   <dt>Ruby 1.8.7</dt>
   <dd>
-    1.8.7 is fully supported, however, if nothing is keeping you from it, we
-    recommend upgrading or switching to JRuby or Rubinius. Support for 1.8.7
-    will not be dropped before Sinatra 2.0. Ruby 1.8.6 is no longer supported.
+    1.8.7は完全にサポートされていますが、特にそれでなければならないという理由がないのであれば、アップグレードまたはJRubyまたはRubiniusへの移行を薦めます。1.8.7のサポートがSinatra 2.0の前に終わることはないでしょう。Ruby 1.8.6はサポート対象外です。
   </dd>
 
   <dt>Ruby 1.9.2</dt>
   <dd>
-    1.9.2 is fully supported. Do not use 1.9.2p0, as it is known to cause
-    segmentation faults when running Sinatra. Official support will continue
-    at least until the release of Sinatra 1.5.
+    1.9.2は完全にサポートされています。1.9.2p0は、Sinatraを起動したときにセグメントフォルトを引き起こすことが分かっているので、使わないでください。公式なサポートは、少なくともSinatra 1.5のリリースまでは続きます。
   </dd>
 
   <dt>Ruby 1.9.3</dt>
   <dd>
-    1.9.3 is fully supported and recommended. Please note that switching to 1.9.3
-    from an earlier version will invalidate all sessions. 1.9.3 will be supported
-    until the release of Sinatra 2.0.
+    1.9.3は完全にサポート、そして推奨されています。以前のバージョンからの1.9.3への移行は全セッションを無効にする点、覚えておいてください。
   </dd>
 
   <dt>Ruby 2.0.0</dt>
   <dd>
-    2.0.0 is fully supported and recommended. There are currently no plans to drop
-    official support for it.
+    2.0.0は完全にサポート、そして推奨されています。現在、その公式サポートを終了する計画はありません。
   </dd>
 
   <dt>Rubinius</dt>
   <dd>
-    Rubinius is officially supported (Rubinius >= 2.x). It is recommended to
-    <tt>gem install puma</tt>.
+    Rubiniusは公式にサポートされています(Rubinius >= 2.x)。
+    <tt>gem install puma</tt>することが推奨されています。
   </dd>
 
   <dt>JRuby</dt>
@@ -2649,99 +2643,80 @@ The following Ruby versions are officially supported:
     recommended to use C extensions with JRuby. It is recommended to
     <tt>gem install trinidad</tt>.
   </dd>
+  <dd>
+    JRubyの最新安定版が公式にサポートされています。JRubyでC拡張を使うことは推奨されていません。
+    <tt>gem install trinidad</tt>することが推奨されています。
+  </dd>
 </dl>
 
-We also keep an eye on upcoming Ruby versions.
+開発チームは常に最新となるRubyバージョンに注視しています。
 
 The following Ruby implementations are not officially supported but still are
 known to run Sinatra:
+次のRuby実装は公式にはサポートされていませんが、Sinatraが起動すると報告されています。
 
-* Older versions of JRuby and Rubinius
+* JRubyとRubiniusの古いバージョン
 * Ruby Enterprise Edition
 * MacRuby, Maglev, IronRuby
-* Ruby 1.9.0 and 1.9.1 (but we do recommend against using those)
+* Ruby 1.9.0と1.9.1 (これらの使用はお薦めしません)
 
-Not being officially supported means if things only break there and not on a
-supported platform, we assume it's not our issue but theirs.
+公式サポートをしないという意味は、問題がそこだけで起こり、サポートされているプラットフォーム上では起きない場合に、開発チームはそれはこちら側の問題ではないとみなすということです。
 
-We also run our CI against ruby-head (the upcoming 2.1.0), but we can't
-guarantee anything, since it is constantly moving. Expect 2.1.0 to be fully
-supported.
 
-Sinatra should work on any operating system supported by the chosen Ruby
-implementation.
+開発チームはまた、ruby-head(最新となる2.1.0)に対しCIを実行していますが、それが一貫して動くようになるまで何も保証しません。2.1.0が完全にサポートされればその限りではありません。
 
-If you run MacRuby, you should `gem install control_tower`.
 
-Sinatra currently doesn't run on Cardinal, SmallRuby, BlueRuby or any
-Ruby version prior to 1.8.7.
+Sinatraは、利用するRuby実装がサポートしているオペレーティングシステム上なら動作するはずです。
+
+MacRubyを使う場合は、`gem install control_tower`してください。
+
+Sinatraは現在、Cardinal、SmallRuby、BlueRubyまたは1.8.7以前のバージョンのRuby上では動作しません。
 
 ## 最新開発版(The Bleeding Edge)
 
-Sinatraの開発版を使いたい場合は、ローカルに開発版を落として、
-`LOAD_PATH`の`sinatra/lib`ディレクトリを指定して実行して下さい。
+Sinatraの最新開発版のコードを使いたい場合は、マスターブランチに対してアプリケーションを走らせて構いません。ある程度安定しています。また、適宜プレリリース版gemをpushしているので、
 
 ``` shell
-cd myapp
-git clone git://github.com/sinatra/sinatra.git
-ruby -Isinatra/lib myapp.rb
+gem install sinatra --pre
 ```
 
-`sinatra/lib`ディレクトリをアプリケーションの`LOAD_PATH`に追加する方法もあります。
-
-``` ruby
-$LOAD_PATH.unshift File.dirname(__FILE__) + '/sinatra/lib'
-require 'rubygems'
-require 'sinatra'
-
-get '/about' do
-  "今使ってるバージョンは" + Sinatra::VERSION
-end
-```
-
-Sinatraのソースを更新する方法:
-
-``` shell
-cd myproject/sinatra
-git pull
-```
+すれば、最新の機能のいくつかを利用できます。
 
 ### Bundlerを使う場合
 
-If you want to run your application with the latest Sinatra, using
-[Bundler](http://gembundler.com/) is the recommended way.
+最新のSinatraでアプリケーションを動作させたい場合には、[Bundler](http://gembundler.com/)を使うのがお薦めのやり方です。
 
-First, install bundler, if you haven't:
+まず、Bundlerがなければそれをインストールします。
 
 ``` shell
 gem install bundler
 ```
 
-Then, in your project directory, create a `Gemfile`:
+そして、プロジェクトのディレクトリで、`Gemfile`を作ります。
 
 ```ruby
 source 'https://rubygems.org'
 gem 'sinatra', :github => "sinatra/sinatra"
 
-# other dependencies
-gem 'haml'                    # for instance, if you use haml
-gem 'activerecord', '~> 3.0'  # maybe you also need ActiveRecord 3.x
+# 他の依存ライブラリ
+gem 'haml'                    # Hamlを使う場合
+gem 'activerecord', '~> 3.0'  # ActiveRecord 3.xが必要かもしれません
 ```
 
-Note that you will have to list all your application's dependencies in the `Gemfile`.
-Sinatra's direct dependencies (Rack and Tilt) will, however, be automatically
-fetched and added by Bundler.
+ノート: `Gemfile`にアプリケーションの依存ライブラリのすべてを並べる必要があります。しかし、Sinatraが直接依存するもの(RackおよびTile)はBundlerによって自動的に取り込まれ、追加されます。
 
 Now you can run your app like this:
+これで、以下のようにしてアプリケーションを起動することができます。
 
 ``` shell
 bundle exec ruby myapp.rb
 ```
 
+
 ### 直接組み込む場合(Roll Your Own)
 
-Create a local clone and run your app with the `sinatra/lib` directory
-on the `$LOAD_PATH`:
+ローカルにクローンを作って、`sinatra/lib`ディレクトリを`$LOAD_PATH`に追加してアプリケーションを起動します。
+
 
 ``` shell
 cd myapp
@@ -2749,7 +2724,7 @@ git clone git://github.com/sinatra/sinatra.git
 ruby -I sinatra/lib myapp.rb
 ```
 
-To update the Sinatra sources in the future:
+追ってSinatraのソースを更新する方法。
 
 ``` shell
 cd myapp/sinatra
@@ -2758,7 +2733,7 @@ git pull
 
 ### グローバル環境にインストールする場合(Install Globally)
 
-You can build the gem on your own:
+Sinatraのgemを自身でビルドすることもできます。
 
 ``` shell
 git clone git://github.com/sinatra/sinatra.git
@@ -2767,7 +2742,7 @@ rake sinatra.gemspec
 rake install
 ```
 
-If you install gems as root, the last step should be:
+gemをルートとしてインストールする場合は、最後のステップはこうなります。
 
 ``` shell
 sudo rake install
@@ -2775,31 +2750,32 @@ sudo rake install
 
 ## バージョニング(Versioning)
 
-Sinatra follows [Semantic Versioning](http://semver.org/), both SemVer and
-SemVerTag.
+Sinatraは、[Semantic Versioning](http://semver.org/)におけるSemVerおよびSemVerTagの両方に準拠しています。
 
 ## 参考文献(Further Reading)
 
-日本語サイト
-
--   [Greenbear Laboratory
-    Rack日本語マニュアル](http://route477.net/w/RackReferenceJa.html)
-    - Rackの日本語マニュアル
-
-英語サイト
-
--   [プロジェクトサイト](http://sinatra.github.com/) - ドキュメント、
+* [プロジェクトサイト](http://sinatra.github.com/) - ドキュメント、
     ニュース、他のリソースへのリンクがあります。
 
--   [プロジェクトに参加(貢献)する](http://sinatra.github.com/contributing.html)
-    - バグレポート パッチの送信、サポートなど
+* [プロジェクトに参加(貢献)する](http://sinatra.github.com/contributing.html)
+  - バグレポート パッチの送信、サポートなど
 
--   [Issue tracker](http://github.com/sinatra/sinatra/issues) -
-    チケット管理とリリース計画
+* [Issue tracker](http://github.com/sinatra/sinatra/issues)
 
--   [Twitter](http://twitter.com/sinatra)
+* [Twitter](http://twitter.com/sinatra)
 
--   [メーリングリスト](http://groups.google.com/group/sinatrarb)
+* [メーリングリスト](http://groups.google.com/group/sinatrarb/topics)
 
--   [IRC: \#sinatra](irc://chat.freenode.net/#sinatra) on
-    [freenode.net](http://freenode.net)
+* http://freenode.net上のIRC: [#sinatra](irc://chat.freenode.net/#sinatra)
+
+* [Sinatra Book](http://sinatra-book.gittr.com) クックブック、チュートリアル
+
+* [Sinatra Recipes](http://recipes.sinatrarb.com/) コミュニティによるレシピ集
+
+* http://rubydoc.info上のAPIドキュメント: [最新版(latest release)用](http://rubydoc.info/gems/sinatra)または[現在のHEAD用](http://rubydoc.info/github/sinatra/sinatra)
+  
+* [CIサーバ](http://travis-ci.org/sinatra/sinatra)
+
+* [Greenbear Laboratory Rack日本語マニュアル](http://route477.net/w/RackReferenceJa.html)
+  - Rackの日本語マニュアル
+

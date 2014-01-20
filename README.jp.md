@@ -2282,10 +2282,6 @@ class MyApp < Sinatra::Base
 end
 ```
 
-The methods available to `Sinatra::Base` subclasses are exactly the same as those
-available via the top-level DSL. Most top-level apps can be converted to
-`Sinatra::Base` components with two modifications:
-
 `Sinatra::Base`のサブクラスで利用できるメソッドは、トップレベルDSLで利用できるものと全く同じです。ほとんどのトップレベルで記述されたアプリは、以下の２点を修正することで`Sinatra::Base`コンポーネントに変えることができます。
 
 * `sinatra`の代わりに`sinatra/base`を読み込む
@@ -2508,65 +2504,67 @@ run RailsProject::Application
 全てのSinatraアプリケーションはSinatra::Baseのサブクラスに相当します。
 もしトップレベルDSLを利用しているならば(`require 'sinatra'`)このクラスはSinatra::Applicationであり、
 そうでなければ、あなたが明示的に作成したサブクラスです。
-クラスレベルでは\`get\`や\`before\`のようなメソッドを持っています。
-しかし\`request\`オブジェクトや\`session\`には、全てのリクエストのために1つのアプリケーションクラスが存在するためアクセスできません。
+クラスレベルでは`get`や`before`のようなメソッドを持っています。
+しかし`request`や`session`オブジェクトには、全てのリクエストに対する単一のアプリケーションクラスがあるだけなので、アクセスできません。
 
-\`set\`によって作られたオプションはクラスレベルのメソッドです:
+`set`によって作られたオプションはクラスレベルのメソッドです:
 
 ``` ruby
 class MyApp < Sinatra::Base
-  # Hey, I'm in the application scope!
+  # アプリケーションスコープの中だよ!
   set :foo, 42
   foo # => 42
 
   get '/foo' do
-    # Hey, I'm no longer in the application scope!
+    # もうアプリケーションスコープの中にいないよ!
   end
 end
 ```
 
 次の場所ではアプリケーションスコープバインディングを持ちます:
 
--   アプリケーションのクラス本体
+-   アプリケーションクラス本体
 
 -   拡張によって定義されたメソッド
 
--   \`helpers\`に渡されたブロック
+-   `helpers`に渡されたブロック
 
--   \`set\`の値として使われるProcまたはブロック
+-   `set`の値として使われるProcまたはブロック
+
+-   `Sinatra.new`に渡されたブロック
 
 このスコープオブジェクト(クラス)は次のように利用できます:
 
 -   configureブロックに渡されたオブジェクト経由(`configure { |c| ... }`)
 
--   リクエストスコープの中での\`settings\`
+-   リクエストスコープの中での`settings`
 
 ### リクエスト/インスタンスのスコープ(Request/Instance Scope)
 
 やってくるリクエストごとに、あなたのアプリケーションクラスの新しいインスタンスが作成され、全てのハンドラブロックがそのスコープで実行されます。
-このスコープの内側からは\`request\`や\`session\`オブジェクトにアクセスすることができ、\`erb\`や\`haml\`のような表示メソッドを呼び出すことができます。
-リクエストスコープの内側からは、\`settings\`ヘルパーによってアプリケーションスコープにアクセスすることができます。
+このスコープの内側からは`request`や`session`オブジェクトにアクセスすることができ、`erb`や`haml`のようなレンダリングメソッドを呼び出すことができます。
+リクエストスコープの内側からは、`settings`ヘルパーによってアプリケーションスコープにアクセスすることができます。
 
 ``` ruby
 class MyApp < Sinatra::Base
-  # Hey, I'm in the application scope!
+  # アプリケーションスコープの中だよ!
   get '/define_route/:name' do
-    # Request scope for '/define_route/:name'
+    # '/define_route/:name'のためのリクエストスコープ
     @value = 42
 
     settings.get("/#{params[:name]}") do
-      # Request scope for "/#{params[:name]}"
+      # "/#{params[:name]}"のためのリクエストスコープ
       @value # => nil (not the same request)
     end
 
-    "Route defined!"
+    "ルーティングが定義された!"
   end
 end
 ```
 
 次の場所ではリクエストスコープバインディングを持ちます:
 
--   get/head/post/put/delete ブロック
+-   get/head/post/put/delete/options/patch/link/unlink ブロック
 
 -   before/after フィルタ
 
@@ -2577,21 +2575,19 @@ end
 ### デリゲートスコープ(Delegation Scope)
 
 デリゲートスコープは、単にクラススコープにメソッドを転送します。
-しかしながら、クラスのバインディングを持っていないため、クラススコープと全く同じふるまいをするわけではありません:
+しかしながら、クラスのバインディングを持っていないため、クラススコープと全く同じふるまいをするわけではありません。
 委譲すると明示的に示されたメソッドのみが利用可能であり、またクラススコープと変数/状態を共有することはできません(注:
-異なった\`self\`を持っています)。
+異なった`self`を持っています)。
 `Sinatra::Delegator.delegate :method_name`を呼び出すことによってデリゲートするメソッドを明示的に追加することができます。
 
 次の場所ではデリゲートスコープを持ちます:
 
 -   もし`require "sinatra"`しているならば、トップレベルバインディング
 
--   \`Sinatra::Delegator\` mixinでextendされたオブジェクト
+-   `Sinatra::Delegator` mixinでextendされたオブジェクト
 
 コードをご覧ください: ここでは [Sinatra::Delegator
-mixin](http://github.com/sinatra/sinatra/blob/ceac46f0bc129a6e994a06100aa854f606fe5992/lib/sinatra/base.rb#L1128)
-は[main
-名前空間にincludeされています](http://github.com/sinatra/sinatra/blob/ceac46f0bc129a6e994a06100aa854f606fe5992/lib/sinatra/main.rb#L28).
+mixin](https://github.com/sinatra/sinatra/blob/ca06364/lib/sinatra/base.rb#L1609-1633)は[mainオブジェクトにextendされています](https://github.com/sinatra/sinatra/blob/ca06364/lib/sinatra/main.rb#L28-30)。
 
 ## コマンドライン(Command Line)
 

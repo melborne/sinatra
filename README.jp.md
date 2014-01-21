@@ -1302,6 +1302,8 @@ end
 Sometimes `pass` is not what you want, instead you would like to get the result
 of calling another route. Simply use `call` to achieve this:
 
+`pass`を使ってルーティングを飛ばすのではなく、他のルーティングを呼んだ結果を得たいというときがあります。これを実現するには`call`を使えばいいです。
+
 ``` ruby
 get '/foo' do
   status, headers, body = call env.merge("PATH_INFO" => '/bar')
@@ -1313,22 +1315,16 @@ get '/bar' do
 end
 ```
 
-Note that in the example above, you would ease testing and increase performance
-by simply moving `"bar"` into a helper used by both `/foo`
-and `/bar`.
+ノート: 先の例において、テストを楽にしパフォーマンスを改善するには、`"bar"`を単にヘルパーに移し、`/foo`および`/bar`から使えるようにするのがいいです。
 
-If you want the request to be sent to the same application instance rather than
-a duplicate, use `call!` instead of `call`.
+リクエストが、その複製物でない同じアプリケーションのインスタンスに送られるようにしたいときは、`call`に代えて`call!`を使ってください。
 
-Check out the Rack specification if you want to learn more about `call`.
+`call`についての詳細はRackの仕様書を参照してください。
+
 
 ### ボディ、ステータスコードおよびヘッダの設定
 
-It is possible and recommended to set the status code and response body with the
-return value of the route block. However, in some scenarios you might want to
-set the body at an arbitrary point in the execution flow. You can do so with the
-`body` helper method. If you do so, you can use that method from there on to
-access the body:
+ステータスコードおよびレスポンスボディを、ルーティングブロックの戻り値にセットすることが可能であり、これは推奨されています。しかし、あるケースでは実行フローの任意のタイミングでボディをセットしたくなるかもしれません。`body`ヘルパーメソッドを使えばそれができます。そうすると、それ以降、ボディにアクセスするためにそのメソッドを使うことができるようになります。
 
 ``` ruby
 get '/foo' do
@@ -1340,10 +1336,9 @@ after do
 end
 ```
 
-It is also possible to pass a block to `body`, which will be executed by the
-Rack handler (this can be used to implement streaming, see "Return Values").
+また、`body`にはブロックを渡すことができ、これはRackハンドラにより実行されることになります(これはストリーミングを実装するのに使われます。"戻り値"の項を参照してください。)
 
-Similar to the body, you can also set the status code and headers:
+ボディと同様に、ステータスコードおよびヘッダもセットできます。
 
 ``` ruby
 get '/foo' do
@@ -1355,79 +1350,70 @@ get '/foo' do
 end
 ```
 
-Like `body`, `headers` and `status` with no arguments can be used to access
-their current values.
+引数を伴わない`body`、`headers`、`status`などは、それらの現在の値にアクセスするために使えます。
 
 ### ストリーミングレスポンス(Streaming Responses)
 
-Sometimes you want to start sending out data while still generating parts of
-the response body. In extreme examples, you want to keep sending data until
-the client closes the connection. You can use the `stream` helper to avoid
-creating your own wrapper:
+Sometimes you want to start sending out data while still generating parts of the response body. In extreme examples, you want to keep sending data until the client closes the connection. You can use the `stream` helper to avoid creating your own wrapper:
+
+レスポンスボディの部分を未だ生成している段階で、データを送り出したいということがあります。極端な例では、クライアントがコネクションを閉じるまでデータを送り続けたいことがあります。`stream`ヘルパーを使えば、独自ラッパーを作る必要はありません。
 
 ``` ruby
 get '/' do
   stream do |out|
-    out << "It's gonna be legen -\n"
+    out << "それは伝 -\n"
     sleep 0.5
-    out << " (wait for it) \n"
+    out << " (少し待つ) \n"
     sleep 1
-    out << "- dary!\n"
+    out << "- 説になる！\n"
   end
 end
 ```
 
-This allows you to implement streaming APIs,
-[Server Sent Events](http://dev.w3.org/html5/eventsource/), and can be used as
-the basis for [WebSockets](http://en.wikipedia.org/wiki/WebSocket). It can also be
-used to increase throughput if some but not all content depends on a slow
-resource.
+これはストリーミングAPI、[Server Sent Events](http://dev.w3.org/html5/eventsource/)の実装を可能にし、[WebSockets](http://en.wikipedia.org/wiki/WebSocket)の土台に使うことができます。また、一部のコンテンツが遅いリソースに依存しているときに、スループットを上げるために使うこともできます。
 
-Note that the streaming behavior, especially the number of concurrent requests,
-highly depends on the web server used to serve the application. Some servers,
-like WEBRick, might not even support streaming at all. If the server does not
-support streaming, the body will be sent all at once after the block passed to
-`stream` finishes executing. Streaming does not work at all with Shotgun.
+ノート: ストリーミングの挙動、特に並行リクエスト(cuncurrent requests)の数は、アプリケーションを提供するのに使われるWebサーバに強く依存します。WEBRickを含むいくつかのサーバは、ストリーミングを全くサポートしません。サーバがストリーミングをサポートしない場合、ボディは`stream`に渡されたブロックの実行が終了した後、一度に全部送られることになります。ストリーミングは、Shotgunを使った場合は全く動作しません。
 
-If the optional parameter is set to `keep_open`, it will not call `close` on
-the stream object, allowing you to close it at any later point in the
-execution flow. This only works on evented servers, like Thin and Rainbows.
-Other servers will still close the stream:
+If the optional parameter is set to `keep_open`, it will not call `close` on the stream object, allowing you to close it at any later point in the
+execution flow. This only works on evented servers, like Thin and Rainbows. Other servers will still close the stream:
+
+オプション引数が`keep_open`にセットされている場合、ストリームオブジェクト上で`close`は呼ばれず、実行フローの任意の送れたタイミングでユーザがこれを閉じることを可能にします。これはThinやRainbowsのようなイベント型サーバ上でしか機能しません。他のサーバでは依然ストリームは閉じられます。
 
 ``` ruby
-# long polling
+# ロングポーリング
 
 set :server, :thin
 connections = []
 
 get '/subscribe' do
-  # register a client's interest in server events
+  # サーバイベントにおけるクライアントの関心を登録
   stream(:keep_open) { |out| connections << out }
 
-  # purge dead connections
+  # 死んでいるコネクションを排除
   connections.reject!(&:closed?)
 
-  # acknowledge
+  # 肯定応答
   "subscribed"
 end
 
 post '/message' do
   connections.each do |out|
-    # notify client that a new message has arrived
+    # クライアントへ新規メッセージ到着の通知
     out << params[:message] << "\n"
 
-    # indicate client to connect again
+    # クライアントへの再接続の指示
     out.close
   end
 
-  # acknowledge
+  # 肯定応答
   "message received"
 end
 ```
 
 ### ロギング(Logging)
 
-In the request scope, the `logger` helper exposes a `Logger` instance:
+リクエストスコープにおいて、`logger`ヘルパーは`Logger`インスタンスを作り出します。
+
 
 ``` ruby
 get '/' do
@@ -1436,13 +1422,9 @@ get '/' do
 end
 ```
 
-This logger will automatically take your Rack handler's logging settings into
-account. If logging is disabled, this method will return a dummy object, so
-you do not have to worry about it in your routes and filters.
+このロガーは、自動でRackハンドラのロギング設定を参照します。ロギングが無効(disabled)にされている場合、このメソッドはダミーオブジェクトを返すので、ルーティングやフィルタにおいて特に心配することはありません。
 
-Note that logging is only enabled for `Sinatra::Application` by
-default, so if you inherit from `Sinatra::Base`, you probably want to
-enable it yourself:
+ノート: ロギングは、`Sinatra::Application`に対してのみデフォルトで有効にされているので、`Sinatra::Base`を継承している場合は、ユーザがこれを有効化する必要があります。
 
 ``` ruby
 class MyApp < Sinatra::Base
@@ -1452,11 +1434,7 @@ class MyApp < Sinatra::Base
 end
 ```
 
-To avoid any logging middleware to be set up, set the `logging` setting to
-`nil`. However, keep in mind that `logger` will in that case return `nil`. A
-common use case is when you want to set your own logger. Sinatra will use
-whatever it will find in `env['rack.logger']`.
-
+ロギングミドルウェアが設定されてしまうのを避けるには、`logging`設定を`nil`にセットします。しかしこの場合、`logger`が`nil`を返すことを忘れないように。よくあるユースケースは、オリジナルのロガーをセットしたいときです。Sinatraは、とにかく`env['rack.logger']`で見つかるものを使います。
 
 ### MIMEタイプ(Mime Types)
 

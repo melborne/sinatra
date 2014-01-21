@@ -81,7 +81,7 @@ ThinがあればSinatraはこれを利用するので、`gem install thin`する
         * [URLの生成](#urlの生成)
         * [ブラウザリダイレクト(Browser Redirect)](#ブラウザリダイレクトbrowser-redirect)
         * [キャッシュ制御(Cache Control)](#キャッシュ制御cache-control)
-        * [ファイルの送信(Sending Files)](#ファイルの送信sending-files)
+        * [ファイルの送信](#ファイルの送信)
         * [リクエストオブジェクトへのアクセス](#リクエストオブジェクトへのアクセス)
         * [アタッチメント(Attachments)](#アタッチメントattachments)
         * [日付と時刻の取り扱い](#日付と時刻の取り扱い)
@@ -1455,20 +1455,19 @@ end
 
 ### URLの生成
 
-For generating URLs you should use the `url` helper method, for instance, in
-Haml:
+URLを生成するためには`url`ヘルパーメソッドが使えます。Hamlではこのようにします。
 
 ``` ruby
 %a{:href => url('/foo')} foo
 ```
 
-It takes reverse proxies and Rack routers into account, if present.
+これはリバースプロキシおよびRackルーティングを、それらがあれば考慮に入れます。
 
-This method is also aliased to `to` (see below for an example).
+このメソッドには`to`というエイリアスがあります(以下の例を参照)。
 
 ### ブラウザリダイレクト(Browser Redirect)
 
-You can trigger a browser redirect with the `redirect` helper method:
+`redirect` ヘルパーメソッドを使うことで、ブラウザをリダイレクトさせることができます。
 
 ``` ruby
 get '/foo' do
@@ -1476,15 +1475,14 @@ get '/foo' do
 end
 ```
 
-Any additional parameters are handled like arguments passed to `halt`:
+他に追加されるパラメータは、`halt`に渡される引数と同様に取り扱われます。
 
 ``` ruby
 redirect to('/bar'), 303
 redirect 'http://google.com', 'wrong place, buddy'
 ```
 
-You can also easily redirect back to the page the user came from with
-`redirect back`:
+また、`redirect back`を使えば、簡単にユーザが来たページへ戻るリダイレクトを作れます。
 
 ``` ruby
 get '/foo' do
@@ -1497,13 +1495,14 @@ get '/bar' do
 end
 ```
 
-To pass arguments with a redirect, either add them to the query:
+redirectに引数を渡すには、それをクエリーに追加するか、
+
 
 ``` ruby
 redirect to('/bar?sum=42')
 ```
 
-Or use a session:
+または、セッションを使います。
 
 ``` ruby
 enable :sessions
@@ -1520,9 +1519,9 @@ end
 
 ### キャッシュ制御(Cache Control)
 
-Setting your headers correctly is the foundation for proper HTTP caching.
+ヘッダを正しく設定することが、適切なHTTPキャッシングのための基礎となります。
 
-You can easily set the Cache-Control header like this:
+キャッシュ制御ヘッダは、次のように簡単に設定できます。
 
 ``` ruby
 get '/' do
@@ -1531,7 +1530,7 @@ get '/' do
 end
 ```
 
-Pro tip: Set up caching in a before filter:
+ヒント: キャッシングをbeforeフィルタ内で設定します。
 
 ``` ruby
 before do
@@ -1539,8 +1538,7 @@ before do
 end
 ```
 
-If you are using the `expires` helper to set the corresponding header,
-`Cache-Control` will be set automatically for you:
+`expires`ヘルパーを対応するヘッダに使っている場合は、キャッシュ制御は自動で設定されます。
 
 ``` ruby
 before do
@@ -1548,10 +1546,7 @@ before do
 end
 ```
 
-To properly use caches, you should consider using `etag` or `last_modified`.
-It is recommended to call those helpers *before* doing any heavy lifting, as they
-will immediately flush a response if the client already has the current
-version in its cache:
+キャッシュを適切に使うために、`etag`または`last_modified`を使うことを検討してください。これらのヘルパーを、重い仕事をさせる*前*に呼ぶことを推奨します。そうすれば、クライアントが既にキャッシュに最新版を持っている場合はレスポンスを直ちに破棄するようになります。
 
 ``` ruby
 get '/article/:id' do
@@ -1562,16 +1557,14 @@ get '/article/:id' do
 end
 ```
 
-It is also possible to use a
-[weak ETag](http://en.wikipedia.org/wiki/HTTP_ETag#Strong_and_weak_validation):
+また、[weak ETag](http://en.wikipedia.org/wiki/HTTP_ETag#Strong_and_weak_validation)を使うこともできます。
 
 ``` ruby
 etag @article.sha1, :weak
 ```
 
-These helpers will not do any caching for you, but rather feed the necessary
-information to your cache. If you are looking for a quick reverse-proxy caching
-solution, try [rack-cache](https://github.com/rtomayko/rack-cache):
+これらのヘルパーは、キャッシングをしてくれませんが、必要な情報をキャッシュに与えてくれます。もし手早いリバースプロキシキャッシングの解決策をお探しなら、 [rack-cache](https://github.com/rtomayko/rack-cache)を試してください。
+
 
 ``` ruby
 require "rack/cache"
@@ -1586,8 +1579,7 @@ get '/' do
 end
 ```
 
-Use the `:static_cache_control` setting (see below) to add
-`Cache-Control` header info to static files.
+`:static_cache_control`設定(以下を参照)を、キャッシュ制御ヘッダ情報を静的ファイルに追加するために使ってください。
 
 According to RFC 2616, your application should behave differently if the If-Match
 or If-None-Match header is set to `*`, depending on whether the resource
@@ -1595,6 +1587,8 @@ requested is already in existence. Sinatra assumes resources for safe (like get)
 and idempotent (like put) requests are already in existence, whereas other
 resources (for instance post requests) are treated as new resources. You
 can change this behavior by passing in a `:new_resource` option:
+
+RFC 2616によれば、アプリケーションは、If-MatchまたはIf-None-Matchヘッダが`*`に設定されている場合には、要求されたリソースが既に存在するか否かに応じて、異なる振る舞いをすべきとなっています。Sinatraは、getのような安全なリクエストおよびputのような冪等なリクエストは既に存在しているものとして仮定し、一方で、他のリソース(例えば、postリクエスト)は新たなリソースとして取り扱われるよう仮定します。この振る舞いは、`:new_resource`オプションを渡すことで変更できます。
 
 ``` ruby
 get '/create' do
@@ -1604,15 +1598,15 @@ get '/create' do
 end
 ```
 
-If you still want to use a weak ETag, pass in a `:kind` option:
+ここでもWeak ETagを使いたい場合は、`:kind`オプションを渡してください。
 
 ``` ruby
 etag '', :new_resource => true, :kind => :weak
 ```
 
-### ファイルの送信(Sending Files)
+### ファイルの送信
 
-For sending files, you can use the `send_file` helper method:
+ファイルを送信するには、`send_file`ヘルパーメソッドを使います。
 
 ``` ruby
 get '/' do
@@ -1620,40 +1614,38 @@ get '/' do
 end
 ```
 
-It also takes options:
+これはオプションを取ることもできます。
 
 ``` ruby
 send_file 'foo.png', :type => :jpg
 ```
 
-The options are:
+オプション一覧
 
 <dl>
   <dt>filename</dt>
-    <dd>file name, in response, defaults to the real file name.</dd>
+    <dd>ファイル名。デフォルトは実際のファイル名。</dd>
 
   <dt>last_modified</dt>
-    <dd>value for Last-Modified header, defaults to the file's mtime.</dd>
+    <dd>Last-Modifiedヘッダの値。デフォルトはファイルのmtime。</dd>
 
   <dt>type</dt>
-    <dd>content type to use, guessed from the file extension if missing.</dd>
+    <dd>コンテンツの種類。設定がない場合、ファイル拡張子から類推される。</dd>
 
   </dt>disposition</dt>
     <dd>
-      used for Content-Disposition, possible value: <tt>nil</tt> (default),
-      <tt>:attachment</tt> and <tt>:inline</tt>
+      Content-Dispositionに使われる。許容値: <tt>nil</tt> (デフォルト)、
+      <tt>:attachment</tt> および <tt>:inline</tt>
     </dd>
 
   <dt>length</dt>
-    <dd>Content-Length header, defaults to file size.</dd>
+    <dd>Content-Lengthヘッダ。デフォルトはファイルサイズ。</dd>
 
   <dt>status</dt>
     <dd>
-      Status code to be send. Useful when sending a static file as an error page.
-
-      If supported by the Rack handler, other means than streaming from the Ruby
-      process will be used. If you use this helper method, Sinatra will automatically
-      handle range requests.
+      送られるステータスコード。静的ファイルをエラーページとして送るときに便利。
+      
+      Rackハンドラでサポートされている場合は、Rubyプロセスからのストリーミング以外の手段が使われる。このヘルパーメソッドを使うと、Sinatraは自動で範囲リクエストを扱う。
     </dd>
 </dl>
 
@@ -1717,8 +1709,7 @@ end
 
 ### アタッチメント(Attachments)
 
-You can use the `attachment` helper to tell the browser the response should be
-stored on disk rather than displayed in the browser:
+`attachment`ヘルパーを使って、レスポンスがブラウザに表示されるのではなく、ディスクに保存されることをブラウザに対し通知することができます。
 
 ``` ruby
 get '/' do
@@ -1727,7 +1718,7 @@ get '/' do
 end
 ```
 
-You can also pass it a file name:
+ファイル名を渡すこともできます。
 
 ``` ruby
 get '/' do
@@ -1738,9 +1729,7 @@ end
 
 ### 日付と時刻の取り扱い
 
-Sinatra offers a `time_for` helper method that generates a Time object
-from the given value. It is also able to convert `DateTime`, `Date` and
-similar classes:
+Sinatraは`time_for`ヘルパーメソッドを提供しており、それは与えられた値からTimeオブジェクトを生成します。これはまた`DateTime`、`Date`および類似のクラスを変換できます。
 
 ``` ruby
 get '/' do
@@ -1749,9 +1738,7 @@ get '/' do
 end
 ```
 
-This method is used internally by `expires`, `last_modified` and akin. You can
-therefore easily extend the behavior of those methods by overriding `time_for`
-in your application:
+このメソッドは、`expires`、`last_modified`といった種類のものの内部で使われています。そのため、アプリケーションにおいて、`time_for`をオーバーライドすることでそれらのメソッドの挙動を簡単に拡張できます。
 
 ``` ruby
 helpers do
@@ -1773,7 +1760,7 @@ end
 
 ### テンプレートファイルの探索
 
-The `find_template` helper is used to find template files for rendering:
+`find_template`ヘルパーは、レンダリングのためのテンプレートファイルを見つけるために使われます。
 
 ``` ruby
 find_template settings.views, 'foo', Tilt[:haml] do |file|
@@ -1781,9 +1768,8 @@ find_template settings.views, 'foo', Tilt[:haml] do |file|
 end
 ```
 
-This is not really useful. But it is useful that you can actually override this
-method to hook in your own lookup mechanism. For instance, if you want to be
-able to use more than one view directory:
+この例はあまり有益ではありません。しかし、このメソッドを、独自の探索機構で働くようオーバーライドするなら有益になります。例えば、複数のビューディレクトリを使えるようにしたいときがあります。
+
 
 ``` ruby
 set :views, ['views', 'templates']
@@ -1795,7 +1781,7 @@ helpers do
 end
 ```
 
-Another example would be using different directories for different engines:
+他の例としては、異なるエンジン用の異なるディレクトリを使う場合です。
 
 ``` ruby
 set :views, :sass => 'views/sass', :haml => 'templates', :default => 'views'
@@ -1809,7 +1795,7 @@ helpers do
 end
 ```
 
-You can also easily wrap this up in an extension and share with others!
+これをエクステンションとして書いて、他の人と簡単に共有することもできます！
 
 Note that `find_template` does not check if the file really exists but
 rather calls the given block for all possible paths. This is not a performance
@@ -1817,6 +1803,9 @@ issue, since `render` will use `break` as soon as a file is found. Also,
 template locations (and content) will be cached if you are not running in
 development mode. You should keep that in mind if you write a really crazy
 method.
+
+ノート: `find_template`はファイルが実際に存在するかのチェックをしませんが、与えられたブロックをすべての可能なパスに対し呼び出します。これがパフォーマンス上の問題にはならないのは、`render`はファイルを見つけると直ちに`break`を使うからです。また、テンプレートの場所（および内容）は、developmentモードでの起動でない限りはキャッシュされます。このことは、複雑なメソッド(a really crazy method)を書いた場合は記憶しておく必要があります。
+
 
 ## コンフィギュレーション(Configuration)
 

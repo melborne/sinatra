@@ -1863,31 +1863,24 @@ end
 
 ### 攻撃防御に対する設定
 
-Sinatra is using
-[Rack::Protection](https://github.com/rkh/rack-protection#readme) to defend
-your application against common, opportunistic attacks. You can easily disable
-this behavior (which will open up your application to tons of common
-vulnerabilities):
+Sinatraは、[Rack::Protection](https://github.com/rkh/rack-protection#readme)を使って、アプリケーションを多発する日和見的攻撃から守っています。この挙動は簡単に無効化できます(これはアプリケーションを大量の脆弱性攻撃に晒すことになります)。
 
 ``` ruby
 disable :protection
 ```
 
-To skip a single defense layer, set `protection` to an options hash:
+単一の防御層を外すためには、`protection`をオプションハッシュにセットします。
 
 ``` ruby
 set :protection, :except => :path_traversal
 ```
-You can also hand in an array in order to disable a list of protections:
+また配列を渡して、複数の防御を無効にすることもできます。
 
 ``` ruby
 set :protection, :except => [:path_traversal, :session_hijacking]
 ```
 
-By default, Sinatra will only set up session based protection if `:sessions`
-has been enabled. Sometimes you want to set up sessions on your own, though. In
-that case you can get it to set up session based protections by passing the
-`:session` option:
+デフォルトでSinatraは、`:sessions`が有効になっている場合、セッションベースの防御だけを設定します。しかし、自身でセッションを設定したい場合があります。その場合は、`:session`オプションを渡すことにより、セッションベースの防御を設定することができます。
 
 ``` ruby
 use Rack::Session::Pool
@@ -1899,189 +1892,158 @@ set :protection, :session => true
 <dl>
   <dt>absolute_redirects</dt>
   <dd>
-    If disabled, Sinatra will allow relative redirects, however, Sinatra will no
-    longer conform with RFC 2616 (HTTP 1.1), which only allows absolute redirects.
+    無効のとき、Sinatraは相対リダイレクトを許容するが、RFC 2616 (HTTP 1.1)は絶対リダイレクトのみを許容するので、これには準拠しなくなる。
   </dd>
   <dd>
-    Enable if your app is running behind a reverse proxy that has not been set up
-    properly. Note that the <tt>url</tt> helper will still produce absolute URLs, unless you
-    pass in <tt>false</tt> as the second parameter.
+    アプリケーションが、適切に設定されていないリバースプロキシの裏で走っている場合は有効。ノート: <tt>url</tt>ヘルパーは、第２引数に<tt>false</tt>を渡さない限り、依然として絶対URLを生成する。
   </dd>
-  <dd>Disabled by default.</dd>
+  <dd>デフォルトは無効。</dd>
 
   <dt>add_charsets</dt>
   <dd>
-    Mime types the <tt>content_type</tt> helper will automatically add the charset info to.
-    You should add to it rather than overriding this option:
+    Mimeタイプ <tt>content_type</tt>ヘルパーが自動的にキャラクタセット情報をここに追加する。このオプションは書き換えるのではなく、値を追加するようにすること。
     <tt>settings.add_charsets << "application/foobar"</tt>
   </dd>
 
   <dt>app_file</dt>
   <dd>
-    Path to the main application file, used to detect project root, views and public
-    folder and inline templates.
+    メインのアプリケーションファイルのパスであり、プロジェクトのルート、viewsおよびpublicフォルダを見つけるために使われる。
   </dd>
 
   <dt>bind</dt>
-  <dd>IP address to bind to (default: <tt>0.0.0.0</tt> <em>or</em> <tt>localhost</tt> if your `environment` is set to development.). Only used for built-in server.</dd>
+  <dd>バインドするIPアドレス(デフォルト: `environment`がdevelopmentにセットされているときは、<tt>0.0.0.0</tt> <em>または</em> <tt>localhost</tt>)。ビルトインサーバでのみ使われる。
 
   <dt>default_encoding</dt>
-  <dd>Encoding to assume if unknown (defaults to <tt>"utf-8"</tt>).</dd>
+  <dd>不明なときに仮定されるエンコーディング(デフォルトは<tt>"utf-8"</tt>)。</dd>
 
   <dt>dump_errors</dt>
-  <dd>Display errors in the log.</dd>
+  <dd>ログにおけるエラーの表示。</dd>
 
   <dt>environment</dt>
   <dd>
-    Current environment. Defaults to <tt>ENV['RACK_ENV']</tt>, or <tt>"development"</tt> if
-    not available.
+    現在の環境。デフォルトは<tt>ENV['RACK_ENV']</tt>、それが無い場合は<tt>"development"</tt>。
   </dd>
 
   <dt>logging</dt>
-  <dd>Use the logger.</dd>
+  <dd>ロガーの使用。</dd>
 
   <dt>lock</dt>
   <dd>
-    Places a lock around every request, only running processing on request
-    per Ruby process concurrently.
+    各リクエスト周りのロックの配置で、Rubyプロセスごとにリクエスト処理を並行して走らせるようにする。
   </dd>
-  <dd>Enabled if your app is not thread-safe. Disabled per default.</dd>
+  <dd>アプリケーションがスレッドセーフでなければ有効。デフォルトは無効。</dd>
 
   <dt>method_override</dt>
   <dd>
-    Use <tt>_method</tt> magic to allow put/delete forms in browsers that
-    don't support it.
+    put/deleteフォームを、それらをサポートしないブラウザで使えるように<tt>_method</tt>のおまじないを使えるようにする。
   </dd>
 
   <dt>port</dt>
-  <dd>Port to listen on. Only used for built-in server.</dd>
+  <dd>待ち受けポート。ビルトインサーバのみで有効。</dd>
 
   <dt>prefixed_redirects</dt>
   <dd>
-    Whether or not to insert <tt>request.script_name</tt> into redirects if no
-    absolute path is given. That way <tt>redirect '/foo'</tt> would behave like
-    <tt>redirect to('/foo')</tt>. Disabled per default.
+    絶対パスが与えられていないときに、リダイレクトに<tt>request.script_name</tt>を挿入するか否かの設定。これにより<tt>redirect '/foo'</tt>は、<tt>redirect to('/foo')</tt>のように振る舞う。デフォルトは無効。
   </dd>
 
   <dt>protection</dt>
-  <dd>Whether or not to enable web attack protections. See protection section above.</dd>
+  <dd>Web攻撃防御を有効にするか否かの設定。上述の攻撃防御の項を参照。</dd>
 
   <dt>public_dir</dt>
-  <dd>Alias for <tt>public_folder</tt>. See below.</dd>
+  <dd><tt>public_folder</tt>のエイリアス。以下を参照。</dd>
 
   <dt>public_folder</dt>
   <dd>
-    Path to the folder public files are served from. Only used if static
-    file serving is enabled (see <tt>static</tt> setting below). Inferred from
-    <tt>app_file</tt> setting if not set.
+    publicファイルが提供されるディレクトリのパス。静的ファイルの提供が有効になっている場合にのみ使われる (以下の<tt>static</tt>設定を参照)。設定されていない場合、<tt>app_file</tt>設定から推定。
   </dd>
 
   <dt>reload_templates</dt>
   <dd>
-    Whether or not to reload templates between requests. Enabled in development mode.
+    リクエスト間でテンプレートを再ロードするか否かの設定。developmentモードでは有効。
   </dd>
 
   <dt>root</dt>
   <dd>
-    Path to project root folder. Inferred from <tt>app_file</tt> setting if not set.
+    プロジェクトのルートディレクトリのパス。設定されていない場合、<tt>app_file</tt>設定から推定。
   </dd>
 
   <dt>raise_errors</dt>
   <dd>
-    Raise exceptions (will stop application). Enabled by default when
-    <tt>environment</tt> is set to <tt>"test"</tt>, disabled otherwise.
+    例外発生の設定(アプリケーションは止まる)。<tt>environment</tt>が<tt>"test"</tt>に設定されているときはデフォルトは有効。それ以外は無効。
   </dd>
 
   <dt>run</dt>
   <dd>
-    If enabled, Sinatra will handle starting the web server. Do not
-    enable if using rackup or other means.
+    有効のとき、SinatraがWebサーバの起動を取り扱う。rackupまたは他の手段を使うときは有効にしないこと。
   </dd>
 
   <dt>running</dt>
   <dd>Is the built-in server running now? Do not change this setting!</dd>
+  <dd>ビルトインサーバが稼働中か？この設定を変更しないこと！</dd>
 
   <dt>server</dt>
   <dd>
-    Server or list of servers to use for built-in server. Order indicates
-    priority, default depends on Ruby implementation.
+    ビルトインサーバとして使用するサーバまたはサーバ群の指定。指定順位は優先度を表し、デフォルトはRuby実装に依存。
   </dd>
 
   <dt>sessions</dt>
   <dd>
-    Enable cookie-based sessions support using <tt>Rack::Session::Cookie</tt>.
-    See 'Using Sessions' section for more information.
+    <tt>Rack::Session::Cookie</tt>を使ったクッキーベースのセッションサポートの有効化。詳しくは、'セッションの使用'の項を参照のこと。
   </dd>
 
   <dt>show_exceptions</dt>
   <dd>
-    Show a stack trace in the browser when an exception
-    happens. Enabled by default when <tt>environment</tt>
-    is set to <tt>"development"</tt>, disabled otherwise.
+    例外発生時にブラウザにスタックトレースを表示する。<tt>environment</tt>が<tt>"development"</tt>に設定されているときは、デフォルトで有効。それ以外は無効。
   </dd>
   <dd>
-    Can also be set to <tt>:after_handler</tt> to trigger
-    app-specified error handling before showing a stack
-    trace in the browser.
+    また、<tt>:after_handler</tt>をセットすることができ、これにより、ブラウザにスタックトレースを表示する前に、アプリケーション固有のエラーハンドリングを起動させられる。
   </dd>
 
   <dt>static</dt>
-  <dd>Whether Sinatra should handle serving static files.</dd>
-  <dd>Disable when using a server able to do this on its own.</dd>
-  <dd>Disabling will boost performance.</dd>
+  <dd>Sinatraが静的ファイルの提供を取り扱うかの設定。</dd>
+  <dd>その取り扱いができるサーバを使う場合は無効。</dd>
+  <dd>無効化でパフォーマンスは改善する</dd>
   <dd>
-    Enabled per default in classic style, disabled for
-    modular apps.
+    クラッシックスタイルではデフォルトで有効。モジュラースタイルでは無効。
   </dd>
 
   <dt>static_cache_control</dt>
   <dd>
-    When Sinatra is serving static files, set this to add
-    <tt>Cache-Control</tt> headers to the responses. Uses the
-    <tt>cache_control</tt> helper. Disabled by default.
+    Sinatraが静的ファイルを提供するときこれをセットして、レスポンスに<tt>Cache-Control</tt>ヘッダを追加するようにする。<tt>cache_control</tt>ヘルパーを使うこと。デフォルトは無効。
   </dd>
   <dd>
-    Use an explicit array when setting multiple values:
+    複数の値をセットするときは明示的に配列を使う:
     <tt>set :static_cache_control, [:public, :max_age => 300]</tt>
   </dd>
 
   <dt>threaded</dt>
   <dd>
-    If set to <tt>true</tt>, will tell Thin to use <tt>EventMachine.defer</tt>
-    for processing the request.
+    <tt>true</tt>に設定されているときは、Thinにリクエストを処理するために<tt>EventMachine.defer</tt>を使うことを通知する。
   </dd>
 
   <dt>views</dt>
   <dd>
-    Path to the views folder. Inferred from <tt>app_file</tt> setting if
-    not set.
+    ビューディレクトリのパス。設定されていない場合、<tt>app_file</tt>設定から推定する。
   </dd>
 
   <dt>x_cascade</dt>
   <dd>
-    Whether or not to set the X-Cascade header if no route matches.
-    Defaults to <tt>true</tt>.
+    マッチするルーティングが無い場合に、X-Cascadeヘッダをセットするか否かの設定。デフォルトは<tt>true</tt>。
   </dd>
 </dl>
 
 ## 環境設定(Environments)
 
-There are three predefined `environments`: `"development"`,
-`"production"` and `"test"`. Environments can be set
-through the `RACK_ENV` environment variable. The default value is
-`"development"`. In the `"development"` environment all templates are reloaded between
-requests, and special `not_found` and `error` handlers
-display stack traces in your browser.
-In the `"production"` and `"test"` environments, templates are cached by default.
+３種類の既定環境(`environments`)、`"development"`、`"production"`および`"test"`があります。環境は、`RACK_ENV`環境変数を通して設定できます。デフォルト値は、`"development"`です。`"development"`環境において、すべてのテンプレートは、各リクエスト間で再ロードされ、そして、特別の`not_found`および`error`ハンドラがブラウザにスタックトレースを表示します。`"production"`および`"test"`環境においては、テンプレートはデフォルトでキャッシュされます。
 
-To run different environments, set the `RACK_ENV` environment variable:
+異なる環境を走らせるには、`RACK_ENV`環境変数を設定します。
 
 ``` shell
 RACK_ENV=production ruby my_app.rb
 ```
 
-You can use predefined methods: `development?`, `test?` and `production?` to
-check the current environment setting:
+既定メソッド、`development?`、`test?`および`production?`を、現在の環境設定を確認するために使えます。
+
 
 ``` ruby
 get '/' do
@@ -2605,11 +2567,6 @@ ruby myapp.rb [-h] [-x] [-e ENVIRONMENT] [-p PORT] [-o HOST] [-s HANDLER]
   </dd>
 
   <dt>JRuby</dt>
-  <dd>
-    The latest stable release of JRuby is officially supported. It is not
-    recommended to use C extensions with JRuby. It is recommended to
-    <tt>gem install trinidad</tt>.
-  </dd>
   <dd>
     JRubyの最新安定版が公式にサポートされています。JRubyでC拡張を使うことは推奨されていません。
     <tt>gem install trinidad</tt>することが推奨されています。

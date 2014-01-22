@@ -1299,9 +1299,6 @@ end
 
 ### 別ルーティングの誘発
 
-Sometimes `pass` is not what you want, instead you would like to get the result
-of calling another route. Simply use `call` to achieve this:
-
 `pass`を使ってルーティングを飛ばすのではなく、他のルーティングを呼んだ結果を得たいというときがあります。これを実現するには`call`を使えばいいです。
 
 ``` ruby
@@ -1354,8 +1351,6 @@ end
 
 ### ストリーミングレスポンス(Streaming Responses)
 
-Sometimes you want to start sending out data while still generating parts of the response body. In extreme examples, you want to keep sending data until the client closes the connection. You can use the `stream` helper to avoid creating your own wrapper:
-
 レスポンスボディの部分を未だ生成している段階で、データを送り出したいということがあります。極端な例では、クライアントがコネクションを閉じるまでデータを送り続けたいことがあります。`stream`ヘルパーを使えば、独自ラッパーを作る必要はありません。
 
 ``` ruby
@@ -1373,9 +1368,6 @@ end
 これはストリーミングAPI、[Server Sent Events](http://dev.w3.org/html5/eventsource/)の実装を可能にし、[WebSockets](http://en.wikipedia.org/wiki/WebSocket)の土台に使うことができます。また、一部のコンテンツが遅いリソースに依存しているときに、スループットを上げるために使うこともできます。
 
 ノート: ストリーミングの挙動、特に並行リクエスト(cuncurrent requests)の数は、アプリケーションを提供するのに使われるWebサーバに強く依存します。WEBRickを含むいくつかのサーバは、ストリーミングを全くサポートしません。サーバがストリーミングをサポートしない場合、ボディは`stream`に渡されたブロックの実行が終了した後、一度に全部送られることになります。ストリーミングは、Shotgunを使った場合は全く動作しません。
-
-If the optional parameter is set to `keep_open`, it will not call `close` on the stream object, allowing you to close it at any later point in the
-execution flow. This only works on evented servers, like Thin and Rainbows. Other servers will still close the stream:
 
 オプション引数が`keep_open`にセットされている場合、ストリームオブジェクト上で`close`は呼ばれず、実行フローの任意の送れたタイミングでユーザがこれを閉じることを可能にします。これはThinやRainbowsのようなイベント型サーバ上でしか機能しません。他のサーバでは依然ストリームは閉じられます。
 
@@ -1580,13 +1572,6 @@ end
 ```
 
 `:static_cache_control`設定(以下を参照)を、キャッシュ制御ヘッダ情報を静的ファイルに追加するために使ってください。
-
-According to RFC 2616, your application should behave differently if the If-Match
-or If-None-Match header is set to `*`, depending on whether the resource
-requested is already in existence. Sinatra assumes resources for safe (like get)
-and idempotent (like put) requests are already in existence, whereas other
-resources (for instance post requests) are treated as new resources. You
-can change this behavior by passing in a `:new_resource` option:
 
 RFC 2616によれば、アプリケーションは、If-MatchまたはIf-None-Matchヘッダが`*`に設定されている場合には、要求されたリソースが既に存在するか否かに応じて、異なる振る舞いをすべきとなっています。Sinatraは、getのような安全なリクエストおよびputのような冪等なリクエストは既に存在しているものとして仮定し、一方で、他のリソース(例えば、postリクエスト)は新たなリソースとして取り扱われるよう仮定します。この振る舞いは、`:new_resource`オプションを渡すことで変更できます。
 
@@ -1797,13 +1782,6 @@ end
 
 これをエクステンションとして書いて、他の人と簡単に共有することもできます！
 
-Note that `find_template` does not check if the file really exists but
-rather calls the given block for all possible paths. This is not a performance
-issue, since `render` will use `break` as soon as a file is found. Also,
-template locations (and content) will be cached if you are not running in
-development mode. You should keep that in mind if you write a really crazy
-method.
-
 ノート: `find_template`はファイルが実際に存在するかのチェックをしませんが、与えられたブロックをすべての可能なパスに対し呼び出します。これがパフォーマンス上の問題にはならないのは、`render`はファイルを見つけると直ちに`break`を使うからです。また、テンプレートの場所（および内容）は、developmentモードでの起動でない限りはキャッシュされます。このことは、複雑なメソッド(a really crazy method)を書いた場合は記憶しておく必要があります。
 
 
@@ -1978,7 +1956,6 @@ set :protection, :session => true
   </dd>
 
   <dt>running</dt>
-  <dd>Is the built-in server running now? Do not change this setting!</dd>
   <dd>ビルトインサーバが稼働中か？この設定を変更しないこと！</dd>
 
   <dt>server</dt>
@@ -2154,10 +2131,9 @@ Rackは、ロギング、デバッギング、URLルーティング、認証、�
 
 便利なミドルウェアを以下で見つけられます。
 
-[rack](https://github.com/rack/rack/tree/master/lib/rack),
-[rack-contrib](https://github.com/rack/rack-contrib#readm),
-with [CodeRack](http://coderack.org/) or in the
-[Rack wiki](https://github.com/rack/rack/wiki/List-of-Middleware).
+[rack](https://github.com/rack/rack/tree/master/lib/rack)、
+[rack-contrib](https://github.com/rack/rack-contrib#readm)、
+または[Rack wiki](https://github.com/rack/rack/wiki/List-of-Middleware)。
 
 ## テスト(Testing)
 

@@ -226,7 +226,7 @@ get '/posts.?:format?' do
 end
 ```
 
-ところで、ディレクトリトラバーサル保護機能を無効にしないと（下記参照）、
+ところで、ディレクトリトラバーサル攻撃防御設定を無効にしないと（下記参照）、
 ルーティングにマッチする前にリクエストパスが修正される可能性があります。
 
 ### 条件(Conditions)
@@ -235,19 +235,19 @@ end
 
 ``` ruby
 get '/foo', :agent => /Songbird (\d\.\d)[\d\/]*?/ do
-  "You're using Songbird version #{params[:agent][0]}"
+  "Songbirdのバージョン #{params[:agent][0]}を使ってます。"
 end
 
 get '/foo' do
-  # Matches non-songbird browsers
+  # Songbird以外のブラウザにマッチ
 end
 ```
 
-ほかに`host_name`と`provides`条件が利用可能です:
+ほかに`host_name`と`provides`条件が利用可能です。
 
 ``` ruby
 get '/', :host_name => /^admin\./ do
-  "Admin Area, Access denied!"
+  "Adminエリアです。アクセスを拒否します!"
 end
 
 get '/', :provides => 'html' do
@@ -259,17 +259,17 @@ get '/', :provides => ['rss', 'atom', 'xml'] do
 end
 ```
 
-独自の条件を定義することも簡単にできます:
+独自の条件を定義することも簡単にできます。
 
 ``` ruby
 set(:probability) { |value| condition { rand <= value } }
 
 get '/win_a_car', :probability => 0.1 do
-  "You won!"
+  "あなたの勝ちです!"
 end
 
 get '/win_a_car' do
-  "Sorry, you lost."
+  "残念、あなたの負けです。"
 end
 ```
 
@@ -279,8 +279,7 @@ end
 
 これは大抵の場合、上の例のように文字列ですが、それ以外の値も使用することができます。
 
-Rackレスポンス、Rackボディオブジェクト、HTTPステータスコードのいずれかとして
-妥当なオブジェクトであればどのようなオブジェクトでも返すことができます:
+Rackレスポンス、Rackボディオブジェクト、HTTPステータスコードのいずれかとして妥当なオブジェクトであればどのようなオブジェクトでも返すことができます。
 
 -   3要素の配列:
     `[ステータス(Fixnum), ヘッダ(Hash), レスポンスボディ(#eachに応答する)]`
@@ -292,7 +291,7 @@ Rackレスポンス、Rackボディオブジェクト、HTTPステータスコ�
 
 -   ステータスコードを表現するFixnum
 
-そのように、例えばストリーミングの例を簡単に実装することができます:
+これにより、例えばストリーミングの例を簡単に実装することができます。
 
 ``` ruby
 class Stream
@@ -522,7 +521,7 @@ get('/') { markdown :index }
   </tr>
   <tr>
     <td>ファイル拡張子</td>
-    <td><tt>.erb</tt>, <tt>.rhtml</tt> or <tt>.erubis</tt> (Erubis only)</td>
+    <td><tt>.erb</tt>, <tt>.rhtml</tt> or <tt>.erubis</tt> (Erubisだけ)</td>
   </tr>
   <tr>
     <td>例</td>
@@ -640,7 +639,7 @@ get('/') { markdown :index }
   </tr>
 </table>
 
-LiquidテンプレートからRubyのメソッド(`yield`を除く)を呼び出すことができないため、ほぼ全ての場合にlocalsを指定する必要があるでしょう:
+LiquidテンプレートからRubyのメソッド(`yield`を除く)を呼び出すことができないため、ほぼ全ての場合にlocalsを指定する必要があるでしょう。
 
 #### Markdown テンプレート
 
@@ -667,7 +666,7 @@ LiquidテンプレートからRubyのメソッド(`yield`を除く)を呼び出�
 </table>
 
 Markdownからメソッドを呼び出すことも、localsに変数を渡すこともできません。
-それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
+それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です。
 
 ``` ruby
 erb :overview, :locals => { :text => markdown(:introduction) }
@@ -701,7 +700,7 @@ MarkdownからはRubyを呼ぶことができないので、Markdownで書かれ
 </table>
 
 Textileからメソッドを呼び出すことも、localsに変数を渡すこともできません。
-それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
+それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です。
 
 ``` ruby
 erb :overview, :locals => { :text => textile(:introduction) }
@@ -738,7 +737,7 @@ erb :overview, :locals => { :text => textile(:introduction) }
 </table>
 
 RDocからメソッドを呼び出すことも、localsに変数を渡すこともできません。
-それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
+それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です。
 
 ``` ruby
 erb :overview, :locals => { :text => rdoc(:introduction) }
@@ -845,7 +844,7 @@ RadiusテンプレートからRubyのメソッドを直接呼び出すことが�
 </table>
 
 Creoleからメソッドを呼び出すことも、localsに変数を渡すこともできません。
-それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です:
+それゆえ、他のレンダリングエンジンとの組み合わせで使うのが普通です。
 
 ``` ruby
 erb :overview, :locals => { :text => creole(:introduction) }
@@ -1001,7 +1000,7 @@ end
 
 ### `yield`を伴うテンプレートとネストしたレイアウト
 
-レイアウトは通常`yield`を呼ぶ単なるテンプレートに過ぎません。
+レイアウトは通常、`yield`を呼ぶ単なるテンプレートに過ぎません。
 そのようなテンプレートは、既に説明した`:template`オプションを通して使われるか、または次のようなブロックを伴ってレンダリングされます。
 
 ``` ruby
@@ -1031,7 +1030,7 @@ end
 ```
 
 現在、次のレンダリングメソッドがブロックを取れます: `erb`, `haml`,
-`liquid`, `slim `, `wlang`.
+`liquid`, `slim `, `wlang`。
 また汎用の`render`メソッドもブロックを取れます。
 
 
@@ -1057,7 +1056,7 @@ __END__
 %div.title Hello world!!!!!
 ```
 
-ノート: sinatraをrequireするソースファイル内で定義されたインラインテンプレートは自動的に読み込まれます。他のソースファイル内にインラインテンプレートがある場合には`enable :inline_templates`を明示的に呼んでください。
+ノート: Sinatraをrequireするソースファイル内で定義されたインラインテンプレートは自動的に読み込まれます。他のソースファイル内にインラインテンプレートがある場合には`enable :inline_templates`を明示的に呼んでください。
 
 ### 名前付きテンプレート(Named Templates)
 
@@ -1210,7 +1209,7 @@ get '/:value' do
 end
 ```
 
-ノート: `enable :sessions`は実際にはすべてのデータをクッキーに保持します。これは必ずしも期待通りのものにならないかもしれません（例えば、大量のデータを保持することでトラフィックが増大するなど）。Rackセッションmiddlewareの利用が可能であり、その場合は`enable :sessions`を呼ばずに、選択したmiddlewareを他のmiddlewareのときと同じようにして取り込んでください。
+ノート: `enable :sessions`は実際にはすべてのデータをクッキーに保持します。これは必ずしも期待通りのものにならないかもしれません（例えば、大量のデータを保持することでトラフィックが増大するなど）。Rackセッションミドルウェアの利用が可能であり、その場合は`enable :sessions`を呼ばずに、選択したミドルウェアを他のミドルウェアのときと同じようにして取り込んでください。
 
 ``` ruby
 use Rack::Session::Pool, :expire_after => 2592000
@@ -1224,7 +1223,7 @@ get '/:value' do
 end
 ```
 
-セキュリティ向上のため、クッキー内のセッションデータはセッションシークレットで署名されます。Sinatraによりランダムなシークレットが個別に生成されます。しかし、このシークレットはアプリケーションの立ち上げごとに変わってしまうので、すべてのアプリケーションのインスタンスで共有できるシークレットをセットしたくなるかもしれません。
+セキュリティ向上のため、クッキー内のセッションデータはセッション秘密鍵(session secret)で署名されます。Sinatraによりランダムな秘密鍵が個別に生成されます。しかし、この秘密鍵はアプリケーションの立ち上げごとに変わってしまうので、すべてのアプリケーションのインスタンスで共有できる秘密鍵をセットしたくなるかもしれません。
 
 ``` ruby
 set :session_secret, 'super secret'
@@ -1236,7 +1235,7 @@ set :session_secret, 'super secret'
 set :sessions, :domain => 'foo.com'
 ```
 
-foo.comのサブドメイン上のアプリ間でセッションを共有化したいときは、代わりにドメインの前に*.*を付けます。
+foo.comのサブドメイン上のアプリ間でセッションを共有化したいときは、代わりにドメインの前に *.* を付けます。
 
 ``` ruby
 set :sessions, :domain => '.foo.com'
@@ -1244,11 +1243,13 @@ set :sessions, :domain => '.foo.com'
 
 ### 停止(Halting)
 
-フィルタまたはルーティング内で直ちに実行を終了する方法:
+フィルタまたはルーティング内で直ちにリクエストを止める場合は、
 
 ``` ruby
 halt
 ```
+
+を使います。
 
 この際、ステータスを指定することもできます。
 
@@ -1282,7 +1283,7 @@ halt erb(:error)
 
 ### パッシング(Passing)
 
-ルーティングは`pass`を使って次のルーティングに飛ばすことができます:
+ルーティングは`pass`を使って次のルーティングに飛ばすことができます。
 
 ``` ruby
 get '/guess/:who' do
@@ -1369,7 +1370,7 @@ end
 
 ノート: ストリーミングの挙動、特に並行リクエスト(cuncurrent requests)の数は、アプリケーションを提供するのに使われるWebサーバに強く依存します。WEBRickを含むいくつかのサーバは、ストリーミングを全くサポートしません。サーバがストリーミングをサポートしない場合、ボディは`stream`に渡されたブロックの実行が終了した後、一度に全部送られることになります。ストリーミングは、Shotgunを使った場合は全く動作しません。
 
-オプション引数が`keep_open`にセットされている場合、ストリームオブジェクト上で`close`は呼ばれず、実行フローの任意の送れたタイミングでユーザがこれを閉じることを可能にします。これはThinやRainbowsのようなイベント型サーバ上でしか機能しません。他のサーバでは依然ストリームは閉じられます。
+オプション引数が`keep_open`にセットされている場合、ストリームオブジェクト上で`close`は呼ばれず、実行フローの任意の遅れたタイミングでユーザがこれを閉じることを可能にします。これはThinやRainbowsのようなイベント型サーバ上でしか機能しません。他のサーバでは依然ストリームは閉じられます。
 
 ``` ruby
 # ロングポーリング
@@ -1513,12 +1514,12 @@ end
 
 ヘッダを正しく設定することが、適切なHTTPキャッシングのための基礎となります。
 
-キャッシュ制御ヘッダは、次のように簡単に設定できます。
+キャッシュ制御ヘッダ(Cache-Control header)は、次のように簡単に設定できます。
 
 ``` ruby
 get '/' do
   cache_control :public
-  "cache it!"
+  "キャッシュしました!"
 end
 ```
 
@@ -1538,7 +1539,7 @@ before do
 end
 ```
 
-キャッシュを適切に使うために、`etag`または`last_modified`を使うことを検討してください。これらのヘルパーを、重い仕事をさせる*前*に呼ぶことを推奨します。そうすれば、クライアントが既にキャッシュに最新版を持っている場合はレスポンスを直ちに破棄するようになります。
+キャッシュを適切に使うために、`etag`または`last_modified`を使うことを検討してください。これらのヘルパーを、重い仕事をさせる *前* に呼ぶことを推奨します。そうすれば、クライアントが既にキャッシュに最新版を持っている場合はレスポンスを直ちに破棄するようになります。
 
 ``` ruby
 get '/article/:id' do
@@ -1630,14 +1631,14 @@ send_file 'foo.png', :type => :jpg
     <dd>
       送られるステータスコード。静的ファイルをエラーページとして送るときに便利。
       
-      Rackハンドラでサポートされている場合は、Rubyプロセスからのストリーミング以外の手段が使われる。このヘルパーメソッドを使うと、Sinatraは自動で範囲リクエストを扱う。
+      Rackハンドラでサポートされている場合は、Rubyプロセスからのストリーミング以外の手段が使われる。このヘルパーメソッドを使うと、Sinatraは自動で範囲リクエスト(range requests)を扱う。
     </dd>
 </dl>
 
 
 ## リクエストオブジェクトへのアクセス
 
-受信するリクエストオブジェクトは、`request`メソッドを通じてリクエストレベル(フィルタ、ルーティング、エラーハンドラ)からアクセスすることができます:
+受信するリクエストオブジェクトは、`request`メソッドを通じてリクエストレベル(フィルタ、ルーティング、エラーハンドラ)からアクセスすることができます。
 
 ``` ruby
 # アプリケーションが http://example.com/example で動作している場合
@@ -1672,7 +1673,7 @@ get '/foo' do
 end
 ```
 
-`script_name`や`path_info`などのオプションは次のように利用することもできます:
+`script_name`や`path_info`などのオプションは次のように利用することもできます。
 
 ``` ruby
 before { request.path_info = "/" }
@@ -1682,7 +1683,7 @@ get "/" do
 end
 ```
 
-`request.body`はIOまたはStringIOのオブジェクトです:
+`request.body`はIOまたはStringIOのオブジェクトです。
 
 ``` ruby
 post "/api" do
@@ -1699,7 +1700,7 @@ end
 ``` ruby
 get '/' do
   attachment
-  "store it!"
+  "保存しました!"
 end
 ```
 
@@ -1708,7 +1709,7 @@ end
 ``` ruby
 get '/' do
   attachment "info.txt"
-  "store it!"
+  "保存しました!"
 end
 ```
 
@@ -1719,7 +1720,7 @@ Sinatraは`time_for`ヘルパーメソッドを提供しており、それは与
 ``` ruby
 get '/' do
   pass if Time.now > time_for('Dec 23, 2012')
-  "still time"
+  "まだ時間がある"
 end
 ```
 
@@ -2011,7 +2012,7 @@ set :protection, :session => true
 
 ## 環境設定(Environments)
 
-３種類の既定環境(`environments`)、`"development"`、`"production"`および`"test"`があります。環境は、`RACK_ENV`環境変数を通して設定できます。デフォルト値は、`"development"`です。`"development"`環境において、すべてのテンプレートは、各リクエスト間で再ロードされ、そして、特別の`not_found`および`error`ハンドラがブラウザにスタックトレースを表示します。`"production"`および`"test"`環境においては、テンプレートはデフォルトでキャッシュされます。
+３種類の既定環境、`"development"`、`"production"`および`"test"`があります。環境は、`RACK_ENV`環境変数を通して設定できます。デフォルト値は、`"development"`です。`"development"`環境において、すべてのテンプレートは、各リクエスト間で再ロードされ、そして、特別の`not_found`および`error`ハンドラがブラウザにスタックトレースを表示します。`"production"`および`"test"`環境においては、テンプレートはデフォルトでキャッシュされます。
 
 異なる環境を走らせるには、`RACK_ENV`環境変数を設定します。
 
@@ -2072,13 +2073,13 @@ get '/' do
 end
 ```
 
-そうするとこうなります:
+そうするとこうなります。
 
 ```
 エラーメッセージ... 何かがまずかったようです
 ```
 
-あるいは、ステータスコードに対応するエラーハンドラを設定することもできます:
+あるいは、ステータスコードに対応するエラーハンドラを設定することもできます。
 
 ``` ruby
 error 403 do
@@ -2090,7 +2091,7 @@ get '/secret' do
 end
 ```
 
-範囲指定もできます:
+範囲指定もできます。
 
 ``` ruby
 error 400..510 do
@@ -2163,7 +2164,7 @@ class MyAppTest < Test::Unit::TestCase
 
   def test_with_rack_env
     get '/', {}, 'HTTP_USER_AGENT' => 'Songbird'
-    assert_equal "You're using Songbird!", last_response.body
+    assert_equal "Songbirdを使ってます!", last_response.body
   end
 end
 ```
@@ -2412,7 +2413,7 @@ run RailsProject::Application
 クラスレベルでは`get`や`before`のようなメソッドを持っています。
 しかし`request`や`session`オブジェクトには、全てのリクエストに対する単一のアプリケーションクラスがあるだけなので、アクセスできません。
 
-`set`によって作られたオプションはクラスレベルのメソッドです:
+`set`によって作られたオプションはクラスレベルのメソッドです。
 
 ``` ruby
 class MyApp < Sinatra::Base
@@ -2426,7 +2427,7 @@ class MyApp < Sinatra::Base
 end
 ```
 
-次の場所ではアプリケーションスコープバインディングを持ちます:
+次の場所ではアプリケーションスコープバインディングを持ちます。
 
 -   アプリケーションクラス本体
 
@@ -2438,7 +2439,7 @@ end
 
 -   `Sinatra.new`に渡されたブロック
 
-このスコープオブジェクト(クラス)は次のように利用できます:
+このスコープオブジェクト(クラス)は次のように利用できます。
 
 -   configureブロックに渡されたオブジェクト経由(`configure { |c| ... }`)
 
@@ -2467,7 +2468,7 @@ class MyApp < Sinatra::Base
 end
 ```
 
-次の場所ではリクエストスコープバインディングを持ちます:
+次の場所ではリクエストスコープバインディングを持ちます。
 
 -   get/head/post/put/delete/options/patch/link/unlink ブロック
 
@@ -2485,7 +2486,7 @@ end
 異なった`self`を持っています)。
 `Sinatra::Delegator.delegate :method_name`を呼び出すことによってデリゲートするメソッドを明示的に追加することができます。
 
-次の場所ではデリゲートスコープを持ちます:
+次の場所ではデリゲートスコープを持ちます。
 
 -   もし`require "sinatra"`しているならば、トップレベルバインディング
 
@@ -2603,7 +2604,6 @@ gem 'activerecord', '~> 3.0'  # ActiveRecord 3.xが必要かもしれません
 
 ノート: `Gemfile`にアプリケーションの依存ライブラリのすべてを並べる必要があります。しかし、Sinatraが直接依存するもの(RackおよびTile)はBundlerによって自動的に取り込まれ、追加されます。
 
-Now you can run your app like this:
 これで、以下のようにしてアプリケーションを起動することができます。
 
 ``` shell
